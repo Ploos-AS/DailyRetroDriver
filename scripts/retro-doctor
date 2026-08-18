@@ -113,10 +113,16 @@ def main(argv: list[str] | None = None) -> int:
         family_ids = [item["id"] for item in registry["families"]]
         canonical = resolve_canonical_profiles(registry, profiles)
         print("\nProfiles")
+        last_classification = None
         for family in sorted(registry["families"], key=lambda item: item["menu_order"]):
+            if family["classification"] != last_classification:
+                print(f"\n{family['classification'].replace('_', ' ').title()}")
+                last_classification = family["classification"]
             label = family["name"]
             if family["id"] in canonical:
-                reporter.emit("PASS", f"  {label}", f"{family['canonical_profile']} ({family['planned_emulator']} planned)")
+                emulator = family["emulator"]
+                emulator_label = emulator["id"] or "no emulator selected"
+                reporter.emit("PASS", f"  {label}", f"{family['canonical_profile']} (emulator: {emulator_label}; qualification: {emulator['qualification']})")
             else:
                 reporter.emit("FAIL", f"  {label}", "canonical profile could not be resolved")
     except ConfigError as exc:

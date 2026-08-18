@@ -1,0 +1,22 @@
+---
+schema_version: 1
+profile:
+  id: foenix-f256
+  family: foenix
+  title: Foenix F256
+  emulator: null
+  maturity: planned
+machine:
+  model: f256
+display:
+  fullscreen: true
+  aspect_policy: preserve
+input:
+  keyboard: host
+assets: []
+state:
+  directory: state/foenix/foenix-f256
+  mutable: [emulator-config, filesystem, save-data]
+hardware_requirements:
+  all: []
+  preferred: []

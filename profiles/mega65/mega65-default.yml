@@ -1,0 +1,22 @@
+---
+schema_version: 1
+profile:
+  id: mega65-default
+  family: mega65
+  title: MEGA65
+  emulator: Xemu
+  maturity: planned
+machine:
+  model: mega65
+display:
+  fullscreen: true
+  aspect_policy: preserve
+input:
+  keyboard: host
+assets: []
+state:
+  directory: state/mega65/mega65-default
+  mutable: [emulator-config, filesystem, save-data]
+hardware_requirements:
+  all: []
+  preferred: [high_performance_emulation]

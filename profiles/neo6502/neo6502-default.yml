@@ -1,0 +1,22 @@
+---
+schema_version: 1
+profile:
+  id: neo6502-default
+  family: neo6502
+  title: Neo6502
+  emulator: null
+  maturity: planned
+machine:
+  model: neo6502
+display:
+  fullscreen: true
+  aspect_policy: preserve
+input:
+  keyboard: host
+assets: []
+state:
+  directory: state/neo6502/neo6502-default
+  mutable: [emulator-config, filesystem, save-data]
+hardware_requirements:
+  all: []
+  preferred: []

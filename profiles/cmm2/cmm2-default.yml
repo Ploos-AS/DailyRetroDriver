@@ -1,0 +1,22 @@
+---
+schema_version: 1
+profile:
+  id: cmm2-default
+  family: cmm2
+  title: Colour Maximite 2
+  emulator: null
+  maturity: planned
+machine:
+  model: cmm2
+display:
+  fullscreen: true
+  aspect_policy: preserve
+input:
+  keyboard: host
+assets: []
+state:
+  directory: state/cmm2/cmm2-default
+  mutable: [emulator-config, filesystem, save-data]
+hardware_requirements:
+  all: []
+  preferred: []

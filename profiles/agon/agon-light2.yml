@@ -1,0 +1,22 @@
+---
+schema_version: 1
+profile:
+  id: agon-light2
+  family: agon
+  title: Agon Light 2
+  emulator: null
+  maturity: planned
+machine:
+  model: agon-light2
+display:
+  fullscreen: true
+  aspect_policy: preserve
+input:
+  keyboard: host
+assets: []
+state:
+  directory: state/agon/agon-light2
+  mutable: [emulator-config, filesystem, save-data]
+hardware_requirements:
+  all: []
+  preferred: []

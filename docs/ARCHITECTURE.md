@@ -1,5 +1,34 @@
 # Architecture
 
+## Microcomputer experience contract
+
+RetroDailyDriver emulates computers, not game consoles. It is a multi-personality
+personal computer appliance, not a ROM browser, console frontend, cover-art
+launcher, or game collection manager. A future boot flow selects a personality
+whose native environment then hides the host OS:
+
+```text
+POWER ON -> RetroDailyDriver -> personality -> native computer environment
+```
+
+The family registry carries shared experience defaults:
+
+```yaml
+experience_defaults:
+  type: microcomputer
+  boot_target: native_environment
+  persistent_state: true
+  game_frontend: false
+  host_ui_hidden: true
+```
+
+Families and profiles can override these declaratively. Games remain expected
+software, but they run inside the selected computer environment. Future
+qualification must evaluate fullscreen operation, host-UI suppression, keyboard,
+mouse, joystick/gamepad, audio, persistent disks/media/state, native filesystem
+workflows, networking, serial/modem support, appropriate file exchange, clean
+recovery, ARM64 support, and reproducible unattended installation.
+
 ## Separation of concerns
 
 RetroDailyDriver treats DietPi as a managed host, not a desktop. Root-owned
@@ -15,8 +44,8 @@ state:
 /srv/retro-daily-driver/
 ├── assets/                 # user-owned inputs, indexed by manifests
 ├── profiles/               # materialized, reproducible profile data
-├── state/{amiga,atari,commodore,atari8,spectrum,msx}/
-├── media/{amiga,atari,commodore,atari8,spectrum,msx}/
+├── state/{registered-family-id}/
+├── media/{registered-family-id}/
 ├── backups/
 ├── logs/
 └── reports/
@@ -31,7 +60,11 @@ account is deliberately not a member of that group.
 
 Configuration is reproducible and replaceable. `state/` and `media/` are mutable
 and survive profile redeployment. `assets/` is user-managed but auditable by
-manifest. Backups must cover all three mutable areas and their manifests.
+manifest. Future sessions must distinguish immutable base configuration,
+user-owned media, mutable computer state, transient session state, optional
+snapshots, and backups. A file created on an Amiga Workbench disk or a BASIC
+program saved on an X16 must remain available across launches. M0.2 defines the
+contract but does not implement snapshots or backup/restore.
 
 ## Hardware abstraction
 
@@ -52,13 +85,12 @@ silently receiving guessed policy.
 
 The declarative family registry in `families/registry.yml` is the
 launcher-facing catalog. It supplies a stable family ID, display name,
-canonical profile, planned emulator, menu order, and lifecycle status. Generic
-code consumes this registry; it does not contain a family allow-list. The six
-enabled M0.1 entries are Amiga, Atari ST / TT / Falcon, Commodore 8-bit, Atari
-8-bit, ZX Spectrum, and MSX. Experimental candidates (Commander X16, BBC Micro
-/ Master, Apple II, and Acorn Archimedes) are documented but intentionally
-absent from the active registry until their emulator and asset choices are
-evaluated.
+classification, canonical profile, emulator qualification metadata, menu order,
+and lifecycle status. Generic code consumes this registry; it does not contain
+a family allow-list. M0.2 promotes BBC, Apple II, and Archimedes to classic
+families and adds Commander X16, MEGA65, Agon, Neo6502, Foenix F256, Colour
+Maximite 2, and X65 as modern-retro families. ZX Spectrum Next is a
+modern-retro profile under Spectrum, while Spectrum 128K remains canonical.
 
 An appliance profile declares its family and emulator boundary, virtual machine
 parameters, display and input policy, asset references, mutable-state location,
@@ -71,13 +103,23 @@ and required/preferred hardware capabilities. Resolution will follow this order:
 5. render emulator-specific configuration into a session workspace;
 6. start the emulator under supervision.
 
-M0.1 implements document validation, registry resolution, and hardware
-resolution only. The conceptual dependency is
+M0.2 implements document validation, registry resolution, experience defaults,
+and hardware resolution only. The conceptual dependency is
 `family -> profile -> emulator adapter -> session`. Emulator adapters will own
 translation from the generic profile contract into Amiberry, Hatari, VICE,
 Atari800, Fuse, or openMSX configuration; generic code will not manipulate
 emulator flags. A new family can exist in the catalog before its adapter is
 implemented.
+
+Emulator metadata has explicit `unresolved`, `candidate`, and `qualified`
+states. Existing named emulators are candidates, not qualifications. A
+qualified entry must carry evidence for emulator version, supported hardware,
+architecture, DietPi version, graphics backend, and result. No M0.2 entry is
+qualified. Candidate research should use authoritative upstream evidence and
+consider Linux/ARM64 support, maintenance, accuracy, keyboard-computer fit,
+fullscreen and CLI behavior, persistence, audio/input, licensing, and
+reproducible installation. MAME is not selected merely for broad platform
+coverage.
 
 ## Expected boot and session flow
 
@@ -87,25 +129,52 @@ small appliance manager. Its conceptual top-level menu is:
 ```text
 RETRO DAILY DRIVER
 
+Classic Computers
 Amiga
 Atari ST / TT / Falcon
 Commodore
 Atari 8-bit
 ZX Spectrum
 MSX
+BBC
+Apple II
+Acorn Archimedes
+
+Modern Retro
+Commander X16
+MEGA65
+Agon
+Neo6502
+Foenix F256
+Colour Maximite 2
+X65
+
 More...
 Administration
 ```
 
 The manager will derive this menu from the family registry and profile
-eligibility, not literal F1-F10 bindings. It will validate configuration and
+classification/order and eligibility, not literal F1-F10 bindings. It will
+validate configuration and
 assets, present eligible profiles, launch exactly one fullscreen emulator,
 collect logs, and return to the selector on a clean exit or crash. A session
 supervisor will enforce process ownership and recovery. Linux administration
 remains available on a separate console or explicitly enabled administrative
 path.
 
-No launcher, graphical session, supervisor, or emulator is implemented in M0.
+No launcher, graphical session, supervisor, or emulator is implemented in M0.2.
+
+## Keyboard-computer hardware contract
+
+Official appliance qualification initially targets only Raspberry Pi 400,
+Raspberry Pi 500, and Raspberry Pi 500+. Their integrated keyboard form factor
+is intentional: it supports the illusion that the physical appliance is the
+selected computer. The architecture remains portable, but generic Raspberry Pi
+boards are not official M0.2 targets. Peripherals are treated as computer
+interfaces rather than desktop conveniences: keyboard, mouse, joystick/gamepad,
+USB import, networking, serial interfaces, audio, and sensible GPIO
+experimentation are future adapter concerns. M0.2 does not forward GPIO or
+complex peripherals.
 
 ## Security assumptions
 

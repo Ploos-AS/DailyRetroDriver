@@ -27,3 +27,8 @@ firmware. Atari 8-bit firmware, Spectrum ROMs, and MSX machine firmware are
 represented as user-supplied concepts in the example manifest only.
 `assets/manifest.example.yml` contains placeholder hashes only; local
 manifests and asset payloads are ignored by Git.
+
+Modern-retro profiles use the same model for machine firmware, ROMs, emulator-
+provided assets, and mutable storage images. M0.2 leaves newly added profiles'
+asset lists minimal where the legal and technical source is not yet evaluated;
+that is intentional and does not imply an emulator or firmware is bundled.

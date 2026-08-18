@@ -1,5 +1,6 @@
 from pathlib import Path
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -14,6 +15,7 @@ from retro_config import (  # noqa: E402
     discover_and_validate,
     load_family_registry,
     resolve_canonical_profiles,
+    resolve_experience,
     resolve_hardware,
 )
 
@@ -31,18 +33,45 @@ class ConfigurationTests(unittest.TestCase):
         )
 
     def test_expected_appliance_profiles_exist(self) -> None:
-        self.assertEqual(
-            {item["profile"]["id"] for item in self.profiles},
-            {"amiga-a1200", "atari-ste", "commodore-c64", "atari8-800xl", "spectrum-128k", "msx-msx2"},
-        )
+        profile_ids = {item["profile"]["id"] for item in self.profiles}
+        self.assertTrue({"amiga-a1200", "atari-ste", "commodore-c64", "atari8-800xl", "spectrum-128k", "msx-msx2"}.issubset(profile_ids))
+        self.assertTrue({"bbc-master", "apple2-iie", "archimedes-a3000", "x16-default", "mega65-default", "agon-light2", "neo6502-default", "foenix-f256", "cmm2-default", "x65-default"}.issubset(profile_ids))
 
     def test_all_first_class_families_have_canonical_profiles(self) -> None:
+        self.assertEqual(len(self.registry["families"]), 16)
         self.assertEqual(
-            {item["id"] for item in self.registry["families"]},
-            {"amiga", "atari", "commodore", "atari8", "spectrum", "msx"},
+            {item["classification"] for item in self.registry["families"]},
+            {"classic", "modern_retro"},
         )
         canonical = resolve_canonical_profiles(self.registry, self.profiles)
         self.assertEqual(set(canonical), {item["id"] for item in self.registry["families"]})
+
+    def test_core_config_contains_no_family_id_allowlist(self) -> None:
+        source = (ROOT / "scripts" / "retro_config.py").read_text(encoding="utf-8")
+        for family in self.registry["families"]:
+            self.assertNotIn(f'"{family["id"]}"', source)
+
+    def test_experience_defaults_describe_a_microcomputer(self) -> None:
+        defaults = self.registry["experience_defaults"]
+        self.assertEqual(defaults["type"], "microcomputer")
+        self.assertEqual(defaults["boot_target"], "native_environment")
+        self.assertTrue(defaults["persistent_state"])
+        self.assertFalse(defaults["game_frontend"])
+        family = next(item for item in self.registry["families"] if item["id"] == "x16")
+        profile = next(item for item in self.profiles if item["profile"]["id"] == "x16-default")
+        self.assertEqual(resolve_experience(self.registry, family, profile), defaults)
+
+    def test_emulator_qualification_states_are_explicit(self) -> None:
+        states = {item["emulator"]["qualification"] for item in self.registry["families"]}
+        self.assertIn("candidate", states)
+        self.assertIn("unresolved", states)
+        self.assertNotIn("qualified", states)
+
+    def test_spectrum_next_is_a_noncanonical_spectrum_profile(self) -> None:
+        spectrum_profiles = [item for item in self.profiles if item["profile"]["family"] == "spectrum"]
+        self.assertEqual({item["profile"]["id"] for item in spectrum_profiles}, {"spectrum-128k", "spectrum-next"})
+        next_profile = next(item for item in spectrum_profiles if item["profile"]["id"] == "spectrum-next")
+        self.assertEqual(next_profile["profile"]["classification"], "modern_retro")
 
     def test_new_family_can_be_added_without_python_changes(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -53,8 +82,9 @@ class ConfigurationTests(unittest.TestCase):
             registry["families"].append({
                 "id": "test-family",
                 "name": "Test Family",
+                "classification": "classic",
                 "canonical_profile": "test-machine",
-                "planned_emulator": "test-emulator",
+                "emulator": {"id": "test-emulator", "qualification": "candidate"},
                 "menu_order": 999,
                 "status": "experimental",
             })
@@ -88,6 +118,50 @@ class ConfigurationTests(unittest.TestCase):
             with self.assertRaisesRegex(ConfigError, "duplicate family ID"):
                 discover_and_validate(copy_root)
 
+    def test_duplicate_menu_order_fails_validation(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            copy_root = Path(directory) / "repo"
+            shutil.copytree(ROOT, copy_root)
+            registry_path = copy_root / "families" / "registry.yml"
+            registry = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
+            registry["families"][1]["menu_order"] = registry["families"][0]["menu_order"]
+            registry_path.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
+            with self.assertRaisesRegex(ConfigError, "duplicate menu_order"):
+                discover_and_validate(copy_root)
+
+    def test_unknown_classification_fails_cleanly(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            copy_root = Path(directory) / "repo"
+            shutil.copytree(ROOT, copy_root)
+            registry_path = copy_root / "families" / "registry.yml"
+            registry = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
+            registry["families"][0]["classification"] = "console"
+            registry_path.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
+            with self.assertRaisesRegex(ConfigError, "invalid classification"):
+                discover_and_validate(copy_root)
+
+    def test_qualified_emulator_requires_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            copy_root = Path(directory) / "repo"
+            shutil.copytree(ROOT, copy_root)
+            registry_path = copy_root / "families" / "registry.yml"
+            registry = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
+            registry["families"][0]["emulator"]["qualification"] = "qualified"
+            registry_path.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
+            with self.assertRaisesRegex(ConfigError, "requires evidence"):
+                discover_and_validate(copy_root)
+
+    def test_canonical_profile_mismatch_fails_cleanly(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            copy_root = Path(directory) / "repo"
+            shutil.copytree(ROOT, copy_root)
+            registry_path = copy_root / "families" / "registry.yml"
+            registry = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
+            registry["families"][0]["canonical_profile"] = "atari-ste"
+            registry_path.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
+            with self.assertRaisesRegex(ConfigError, "belongs to another family"):
+                discover_and_validate(copy_root)
+
     def test_duplicate_profile_ids_fail_validation(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             copy_root = Path(directory) / "repo"
@@ -107,6 +181,18 @@ class ConfigurationTests(unittest.TestCase):
         for item in self.profiles:
             family = item["profile"]["family"]
             self.assertTrue(item["state"]["directory"].startswith(f"state/{family}/"))
+
+    def test_retro_doctor_lists_registry_families_without_emulator_checks(self) -> None:
+        result = subprocess.run(
+            [sys.executable, str(ROOT / "scripts" / "retro-doctor"), "--repo-root", str(ROOT), "--runtime-root", str(ROOT / "missing-runtime")],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertNotIn("Traceback", result.stdout + result.stderr)
+        self.assertIn("Commander X16", result.stdout)
+        self.assertIn("BBC Micro / Master", result.stdout)
+        self.assertIn("Emulator checks are intentionally deferred", result.stdout)
 
 
 if __name__ == "__main__":

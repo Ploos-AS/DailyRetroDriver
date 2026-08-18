@@ -1,39 +1,121 @@
 ---
 schema_version: 1
+experience_defaults:
+  type: microcomputer
+  boot_target: native_environment
+  persistent_state: true
+  game_frontend: false
+  host_ui_hidden: true
 families:
   - id: amiga
     name: Amiga
+    classification: classic
     canonical_profile: amiga-a1200
-    planned_emulator: amiberry
+    emulator: { id: amiberry, qualification: candidate }
     menu_order: 10
     status: enabled
   - id: atari
     name: Atari ST / TT / Falcon
+    classification: classic
     canonical_profile: atari-ste
-    planned_emulator: hatari
+    emulator: { id: hatari, qualification: candidate }
     menu_order: 20
     status: enabled
   - id: commodore
     name: Commodore 8-bit
+    classification: classic
     canonical_profile: commodore-c64
-    planned_emulator: vice
+    emulator: { id: vice, qualification: candidate }
     menu_order: 30
     status: enabled
   - id: atari8
     name: Atari 8-bit
+    classification: classic
     canonical_profile: atari8-800xl
-    planned_emulator: atari800
+    emulator: { id: atari800, qualification: candidate }
     menu_order: 40
     status: enabled
   - id: spectrum
     name: ZX Spectrum
+    classification: classic
     canonical_profile: spectrum-128k
-    planned_emulator: fuse
+    emulator: { id: fuse, qualification: candidate }
     menu_order: 50
     status: enabled
   - id: msx
     name: MSX
+    classification: classic
     canonical_profile: msx-msx2
-    planned_emulator: openmsx
+    emulator: { id: openmsx, qualification: candidate }
     menu_order: 60
+    status: enabled
+  - id: bbc
+    name: BBC Micro / Master
+    classification: classic
+    canonical_profile: bbc-master
+    emulator: { id: null, qualification: unresolved }
+    menu_order: 70
+    status: enabled
+  - id: apple2
+    name: Apple II
+    classification: classic
+    canonical_profile: apple2-iie
+    emulator: { id: null, qualification: unresolved }
+    menu_order: 80
+    status: enabled
+  - id: archimedes
+    name: Acorn Archimedes
+    classification: classic
+    canonical_profile: archimedes-a3000
+    emulator: { id: null, qualification: unresolved }
+    menu_order: 90
+    status: enabled
+  - id: x16
+    name: Commander X16
+    classification: modern_retro
+    canonical_profile: x16-default
+    emulator: { id: x16emu, qualification: candidate }
+    menu_order: 100
+    status: enabled
+  - id: mega65
+    name: MEGA65
+    classification: modern_retro
+    canonical_profile: mega65-default
+    emulator: { id: Xemu, qualification: candidate }
+    menu_order: 110
+    status: enabled
+  - id: agon
+    name: Agon
+    classification: modern_retro
+    canonical_profile: agon-light2
+    emulator: { id: null, qualification: unresolved }
+    menu_order: 120
+    status: enabled
+  - id: neo6502
+    name: Neo6502
+    classification: modern_retro
+    canonical_profile: neo6502-default
+    emulator: { id: null, qualification: unresolved }
+    menu_order: 130
+    status: enabled
+  - id: foenix
+    name: Foenix F256
+    classification: modern_retro
+    canonical_profile: foenix-f256
+    emulator: { id: null, qualification: unresolved }
+    menu_order: 140
+    status: enabled
+  - id: cmm2
+    name: Colour Maximite 2
+    classification: modern_retro
+    canonical_profile: cmm2-default
+    emulator: { id: null, qualification: unresolved }
+    menu_order: 150
+    status: enabled
+  - id: x65
+    name: X65
+    classification: modern_retro
+    canonical_profile: x65-default
+    emulator: { id: null, qualification: unresolved }
+    menu_order: 160
     status: enabled

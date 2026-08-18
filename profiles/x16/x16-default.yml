@@ -1,0 +1,22 @@
+---
+schema_version: 1
+profile:
+  id: x16-default
+  family: x16
+  title: Commander X16
+  emulator: x16emu
+  maturity: planned
+machine:
+  model: x16
+display:
+  fullscreen: true
+  aspect_policy: preserve
+input:
+  keyboard: host
+assets: []
+state:
+  directory: state/x16/x16-default
+  mutable: [emulator-config, filesystem, save-data]
+hardware_requirements:
+  all: []
+  preferred: [high_performance_emulation]

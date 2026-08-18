@@ -1,0 +1,23 @@
+---
+schema_version: 1
+profile:
+  id: archimedes-a3000
+  family: archimedes
+  title: Acorn Archimedes A3000
+  emulator: null
+  maturity: planned
+machine:
+  model: a3000
+display:
+  fullscreen: true
+  aspect_policy: preserve
+input:
+  keyboard: host
+  pointer: mouse
+assets: []
+state:
+  directory: state/archimedes/archimedes-a3000
+  mutable: [emulator-config, save-data]
+hardware_requirements:
+  all: []
+  preferred: []

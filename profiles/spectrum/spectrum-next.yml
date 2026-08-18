@@ -1,0 +1,23 @@
+---
+schema_version: 1
+profile:
+  id: spectrum-next
+  family: spectrum
+  classification: modern_retro
+  title: ZX Spectrum Next
+  emulator: null
+  maturity: planned
+machine:
+  model: spectrum-next
+display:
+  fullscreen: true
+  aspect_policy: preserve
+input:
+  keyboard: host
+assets: []
+state:
+  directory: state/spectrum/spectrum-next
+  mutable: [emulator-config, filesystem, save-data]
+hardware_requirements:
+  all: []
+  preferred: []

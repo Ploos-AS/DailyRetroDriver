@@ -10,6 +10,9 @@ import yaml
 
 SOURCE_CLASSES = {"user_supplied", "freeware", "open_source", "redistributable"}
 CAPABILITIES = {"high_performance_emulation", "nvme", "usb3_storage"}
+CLASSIFICATIONS = {"classic", "modern_retro"}
+QUALIFICATION_STATES = {"unresolved", "candidate", "qualified"}
+EXPERIENCE_KEYS = {"type", "boot_target", "persistent_state", "game_frontend", "host_ui_hidden"}
 ID_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
 
@@ -55,6 +58,14 @@ def validate_hardware(path: Path) -> dict[str, Any]:
 def validate_registry(path: Path) -> dict[str, Any]:
     data = load_yaml(path)
     families = data.get("families")
+    defaults = data.get("experience_defaults")
+    if not isinstance(defaults, dict) or not EXPERIENCE_KEYS.issubset(defaults):
+        raise ConfigError(f"{path}: experience_defaults must define {sorted(EXPERIENCE_KEYS)}")
+    if defaults.get("type") != "microcomputer" or defaults.get("boot_target") != "native_environment":
+        raise ConfigError(f"{path}: experience defaults must describe a native microcomputer")
+    for key in ("persistent_state", "game_frontend", "host_ui_hidden"):
+        if not isinstance(defaults.get(key), bool):
+            raise ConfigError(f"{path}: experience_defaults.{key} must be boolean")
     if not isinstance(families, list) or not families:
         raise ConfigError(f"{path}: families must be a non-empty list")
     seen: set[str] = set()
@@ -67,9 +78,38 @@ def validate_registry(path: Path) -> dict[str, Any]:
         if family_id in seen:
             raise ConfigError(f"{path}: duplicate family ID {family_id}")
         seen.add(family_id)
-        for key in ("name", "canonical_profile", "planned_emulator"):
+        for key in ("name", "canonical_profile"):
             if not isinstance(family.get(key), str) or not family[key]:
                 raise ConfigError(f"{path}: family {family_id} requires {key}")
+        if family.get("classification") not in CLASSIFICATIONS:
+            raise ConfigError(f"{path}: family {family_id} has invalid classification")
+        emulator = family.get("emulator")
+        if not isinstance(emulator, dict) or emulator.get("qualification") not in QUALIFICATION_STATES:
+            raise ConfigError(f"{path}: family {family_id} has invalid emulator qualification")
+        emulator_id = emulator.get("id")
+        if emulator["qualification"] == "unresolved":
+            if emulator_id is not None:
+                raise ConfigError(f"{path}: unresolved family {family_id} cannot name an emulator")
+        elif not isinstance(emulator_id, str) or not emulator_id:
+            raise ConfigError(f"{path}: family {family_id} requires an emulator ID for {emulator['qualification']}")
+        if emulator["qualification"] == "qualified":
+            evidence = emulator.get("evidence")
+            if not isinstance(evidence, list) or not evidence:
+                raise ConfigError(f"{path}: qualified family {family_id} requires evidence")
+            required_evidence = {"emulator_version", "hardware", "architecture", "dietpi_version", "graphics_backend", "result"}
+            for record in evidence:
+                if not isinstance(record, dict) or not required_evidence.issubset(record):
+                    raise ConfigError(f"{path}: qualified family {family_id} has incomplete evidence")
+        experience = family.get("experience", {})
+        if not isinstance(experience, dict) or not set(experience).issubset(EXPERIENCE_KEYS):
+            raise ConfigError(f"{path}: family {family_id} has invalid experience override")
+        for key, value in experience.items():
+            if key == "type" and value != "microcomputer":
+                raise ConfigError(f"{path}: family {family_id} experience.type must be microcomputer")
+            if key == "boot_target" and value != "native_environment":
+                raise ConfigError(f"{path}: family {family_id} experience.boot_target must be native_environment")
+            if key in {"persistent_state", "game_frontend", "host_ui_hidden"} and not isinstance(value, bool):
+                raise ConfigError(f"{path}: family {family_id} experience.{key} must be boolean")
         if not isinstance(family.get("menu_order"), int) or family["menu_order"] < 0:
             raise ConfigError(f"{path}: family {family_id} has invalid menu_order")
         if family["menu_order"] in menu_orders:
@@ -96,6 +136,21 @@ def validate_profile(path: Path, family_ids: set[str] | None = None) -> dict[str
         raise ConfigError(f"{path}: unknown appliance family")
     if path.parent.name != profile["family"]:
         raise ConfigError(f"{path}: profile directory must match family")
+    if profile.get("classification") is not None and profile["classification"] not in CLASSIFICATIONS:
+        raise ConfigError(f"{path}: invalid profile classification")
+    profile_emulator = profile.get("emulator")
+    if profile_emulator is not None and (not isinstance(profile_emulator, str) or not profile_emulator):
+        raise ConfigError(f"{path}: profile emulator must be a string or null")
+    experience = data.get("experience", {})
+    if not isinstance(experience, dict) or not set(experience).issubset(EXPERIENCE_KEYS):
+        raise ConfigError(f"{path}: invalid experience override")
+    for key, value in experience.items():
+        if key == "type" and value != "microcomputer":
+            raise ConfigError(f"{path}: experience.type must be microcomputer")
+        if key == "boot_target" and value != "native_environment":
+            raise ConfigError(f"{path}: experience.boot_target must be native_environment")
+        if key in {"persistent_state", "game_frontend", "host_ui_hidden"} and not isinstance(value, bool):
+            raise ConfigError(f"{path}: experience.{key} must be boolean")
     for key in ("machine", "display", "input", "state", "hardware_requirements"):
         if not isinstance(data.get(key), dict):
             raise ConfigError(f"{path}: {key} must be a mapping")
@@ -159,7 +214,7 @@ def discover_and_validate(root: Path) -> tuple[list[dict[str, Any]], list[dict[s
         canonical = next(item for item in profiles if item["profile"]["id"] == family["canonical_profile"])
         if canonical["profile"]["family"] != family["id"]:
             raise ConfigError(f"family {family['id']} canonical profile belongs to another family")
-        if canonical["profile"].get("emulator") != family["planned_emulator"]:
+        if canonical["profile"].get("emulator") != family["emulator"].get("id"):
             raise ConfigError(f"family {family['id']} planned emulator disagrees with canonical profile")
     validate_manifest(root / "assets" / "manifest.example.yml", profile_ids)
     return hardware, profiles
@@ -179,3 +234,11 @@ def resolve_canonical_profiles(registry: dict[str, Any], profiles: list[dict[str
         family["id"]: by_id[family["canonical_profile"]]
         for family in registry["families"]
     }
+
+
+def resolve_experience(registry: dict[str, Any], family: dict[str, Any], profile: dict[str, Any]) -> dict[str, Any]:
+    """Merge project, family, and profile experience defaults for future sessions."""
+    result = dict(registry["experience_defaults"])
+    result.update(family.get("experience", {}))
+    result.update(profile.get("experience", {}))
+    return result
