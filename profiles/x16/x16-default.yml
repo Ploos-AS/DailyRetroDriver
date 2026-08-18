@@ -13,6 +13,9 @@ display:
   aspect_policy: preserve
 input:
   keyboard: host
+capabilities:
+  required: [aarch64]
+  recommended: [high_performance_emulation]
 assets: []
 state:
   directory: state/x16/x16-default

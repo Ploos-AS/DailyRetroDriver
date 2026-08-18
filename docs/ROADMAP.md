@@ -23,6 +23,17 @@ registry families resolve canonical profiles; unresolved/candidate states are
 validated without implying qualification; doctor output is registry-driven; and
 no emulator, ROM, launcher, or frontend is installed.
 
+## M0.3 — authentic experience and capability policy (complete)
+
+Make authenticity-first behavior, native environment boot targets, host
+invisibility, display/input/audio/storage/communications requirements,
+authentic-versus-enhanced fidelity, capability recommendations, runtime
+assessment statuses, and user override semantics explicit. Acceptance: required
+and recommended capabilities validate separately; `not_recommended` remains
+startable with acknowledgement; performance cannot create `blocked`; emulator
+qualification remains distinct from host/profile assessment; and no benchmark,
+emulator, launcher, or frontend is implemented.
+
 ## M1 — reproducible host foundation
 
 Provision pinned graphics, audio, and input dependencies; define the dedicated

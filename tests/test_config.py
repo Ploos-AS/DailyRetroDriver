@@ -12,11 +12,13 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from retro_config import (  # noqa: E402
     ConfigError,
+    assessment_can_start,
     discover_and_validate,
     load_family_registry,
     resolve_canonical_profiles,
     resolve_experience,
     resolve_hardware,
+    validate_runtime_assessment,
 )
 
 
@@ -50,6 +52,7 @@ class ConfigurationTests(unittest.TestCase):
         source = (ROOT / "scripts" / "retro_config.py").read_text(encoding="utf-8")
         for family in self.registry["families"]:
             self.assertNotIn(f'"{family["id"]}"', source)
+        self.assertNotIn("Raspberry Pi 400", source)
 
     def test_experience_defaults_describe_a_microcomputer(self) -> None:
         defaults = self.registry["experience_defaults"]
@@ -60,6 +63,46 @@ class ConfigurationTests(unittest.TestCase):
         family = next(item for item in self.registry["families"] if item["id"] == "x16")
         profile = next(item for item in self.profiles if item["profile"]["id"] == "x16-default")
         self.assertEqual(resolve_experience(self.registry, family, profile), defaults)
+
+    def test_authenticity_is_the_default_and_enhanced_is_an_override(self) -> None:
+        self.assertEqual(self.registry["experience_defaults"]["fidelity"], "authentic")
+        family = next(item for item in self.registry["families"] if item["id"] == "amiga")
+        profile = next(item for item in self.profiles if item["profile"]["id"] == "amiga-a1200")
+        profile["experience"] = {"fidelity": "enhanced"}
+        self.assertEqual(resolve_experience(self.registry, family, profile)["fidelity"], "enhanced")
+
+    def test_required_and_recommended_capabilities_are_distinct(self) -> None:
+        x16 = next(item for item in self.profiles if item["profile"]["id"] == "x16-default")
+        self.assertEqual(x16["capabilities"]["required"], ["aarch64"])
+        self.assertEqual(x16["capabilities"]["recommended"], ["high_performance_emulation"])
+        self.assertNotIn("high_performance_emulation", x16["capabilities"]["required"])
+
+    def test_unknown_profile_capability_fails_cleanly(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            copy_root = Path(directory) / "repo"
+            shutil.copytree(ROOT, copy_root)
+            profile_path = copy_root / "profiles" / "x16" / "x16-default.yml"
+            content = profile_path.read_text(encoding="utf-8").replace("[aarch64]", "[not-a-capability]")
+            profile_path.write_text(content, encoding="utf-8")
+            with self.assertRaisesRegex(ConfigError, "unknown profile capabilities"):
+                discover_and_validate(copy_root)
+
+    def test_runtime_assessment_policy_preserves_user_agency(self) -> None:
+        self.assertTrue(assessment_can_start({"status": "qualified", "override_allowed": False}))
+        self.assertTrue(assessment_can_start({"status": "unqualified", "override_allowed": False}))
+        not_recommended = {"status": "not_recommended", "override_allowed": True, "reasons": ["performance_below_target"]}
+        self.assertFalse(assessment_can_start(not_recommended))
+        self.assertTrue(assessment_can_start(not_recommended, acknowledged=True))
+        self.assertFalse(assessment_can_start({"status": "incompatible", "override_allowed": False}))
+        self.assertFalse(assessment_can_start({"status": "blocked", "override_allowed": False}))
+
+    def test_performance_alone_cannot_be_blocked(self) -> None:
+        with self.assertRaisesRegex(ConfigError, "performance alone cannot produce blocked"):
+            validate_runtime_assessment({"status": "blocked", "override_allowed": False, "reasons": ["performance_below_target"]})
+
+    def test_invalid_assessment_status_fails(self) -> None:
+        with self.assertRaisesRegex(ConfigError, "invalid status"):
+            validate_runtime_assessment({"status": "maybe", "override_allowed": False})
 
     def test_emulator_qualification_states_are_explicit(self) -> None:
         states = {item["emulator"]["qualification"] for item in self.registry["families"]}

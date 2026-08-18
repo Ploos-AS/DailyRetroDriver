@@ -12,7 +12,7 @@ computer personality. The intended experience is that the Pi 400, Pi 500, or
 Pi 500+ keyboard computer feels like the selected Amiga, Atari, Commodore,
 Spectrum, MSX, or modern-retro machine.
 
-## M0 / M0.1 / M0.2 status
+## M0–M0.3 status
 
 M0 establishes the repository contracts, hardware and appliance profile
 schemas, asset manifest format, DietPi/Debian provisioning foundation, and a
@@ -22,6 +22,10 @@ adds classic BBC/Apple II/Archimedes and modern-retro X16, MEGA65, Agon,
 Neo6502, Foenix, Colour Maximite 2, and X65 families, plus Spectrum Next. It
 does **not** install or launch emulators,
 ROMs, operating systems, or a graphical interface.
+
+M0.3 adds the authenticity-first principle, authentic/enhanced profile intent,
+and capability/runtime-assessment policy. Performance advice does not silently
+forbid a profile: `not_recommended` remains user-startable with acknowledgement.
 
 Initial hardware targets are Raspberry Pi 400, Raspberry Pi 500, and Raspberry
 Pi 500+. The first-class classic families are Amiga (Amiberry), Atari ST / TT /
@@ -73,6 +77,10 @@ identity and integrity, **not** permission to distribute a work. See
 Architecture, storage policy, and milestone acceptance criteria are documented
 under [`docs/`](docs/).
 
+The authenticity-first experience contract, display/input/audio/storage goals,
+capability assessment semantics, and user-override policy are documented in
+[`docs/EXPERIENCE.md`](docs/EXPERIENCE.md).
+
 Family metadata and menu ordering are declarative in
 [`families/registry.yml`](families/registry.yml). Adding a family requires a
 registry entry and profiles, not a Python allow-list or launcher code change.
@@ -81,7 +89,7 @@ The registry also records classic versus `modern_retro` classification,
 microcomputer experience defaults, and emulator qualification state. A doctor
 `PASS` means profile/configuration integrity only; `candidate` means an emulator
 has been identified but not qualified; `qualified` requires recorded evidence.
-M0.2 marks no emulator qualified.
+M0.3 still marks no emulator qualified and makes no measured performance claim.
 
 ## License
 

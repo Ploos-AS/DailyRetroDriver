@@ -6,6 +6,7 @@ experience_defaults:
   persistent_state: true
   game_frontend: false
   host_ui_hidden: true
+  fidelity: authentic
 families:
   - id: amiga
     name: Amiga

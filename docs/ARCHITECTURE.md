@@ -63,7 +63,7 @@ and survive profile redeployment. `assets/` is user-managed but auditable by
 manifest. Future sessions must distinguish immutable base configuration,
 user-owned media, mutable computer state, transient session state, optional
 snapshots, and backups. A file created on an Amiga Workbench disk or a BASIC
-program saved on an X16 must remain available across launches. M0.2 defines the
+program saved on an X16 must remain available across launches. M0.3 defines the
 contract but does not implement snapshots or backup/restore.
 
 ## Hardware abstraction
@@ -103,8 +103,9 @@ and required/preferred hardware capabilities. Resolution will follow this order:
 5. render emulator-specific configuration into a session workspace;
 6. start the emulator under supervision.
 
-M0.2 implements document validation, registry resolution, experience defaults,
-and hardware resolution only. The conceptual dependency is
+M0.3 implements document validation, registry resolution, experience defaults,
+capability requirements, and assessment policy; hardware resolution remains
+declarative. The conceptual dependency is
 `family -> profile -> emulator adapter -> session`. Emulator adapters will own
 translation from the generic profile contract into Amiberry, Hatari, VICE,
 Atari800, Fuse, or openMSX configuration; generic code will not manipulate
@@ -114,12 +115,18 @@ implemented.
 Emulator metadata has explicit `unresolved`, `candidate`, and `qualified`
 states. Existing named emulators are candidates, not qualifications. A
 qualified entry must carry evidence for emulator version, supported hardware,
-architecture, DietPi version, graphics backend, and result. No M0.2 entry is
+architecture, DietPi version, graphics backend, and result. No M0.3 entry is
 qualified. Candidate research should use authoritative upstream evidence and
 consider Linux/ARM64 support, maintenance, accuracy, keyboard-computer fit,
 fullscreen and CLI behavior, persistence, audio/input, licensing, and
 reproducible installation. MAME is not selected merely for broad platform
 coverage.
+
+Capability requirements and runtime assessment policy are defined in
+[`docs/EXPERIENCE.md`](EXPERIENCE.md). Required capabilities are correctness
+prerequisites; recommended capabilities affect advice only. Assessment status
+is independent of emulator qualification, and performance alone can never make
+a profile blocked.
 
 ## Expected boot and session flow
 
@@ -162,7 +169,7 @@ supervisor will enforce process ownership and recovery. Linux administration
 remains available on a separate console or explicitly enabled administrative
 path.
 
-No launcher, graphical session, supervisor, or emulator is implemented in M0.2.
+No launcher, graphical session, supervisor, or emulator is implemented in M0.3.
 
 ## Keyboard-computer hardware contract
 
@@ -170,10 +177,10 @@ Official appliance qualification initially targets only Raspberry Pi 400,
 Raspberry Pi 500, and Raspberry Pi 500+. Their integrated keyboard form factor
 is intentional: it supports the illusion that the physical appliance is the
 selected computer. The architecture remains portable, but generic Raspberry Pi
-boards are not official M0.2 targets. Peripherals are treated as computer
+boards are not official M0.3 targets. Peripherals are treated as computer
 interfaces rather than desktop conveniences: keyboard, mouse, joystick/gamepad,
 USB import, networking, serial interfaces, audio, and sensible GPIO
-experimentation are future adapter concerns. M0.2 does not forward GPIO or
+experimentation are future adapter concerns. M0.3 does not forward GPIO or
 complex peripherals.
 
 ## Security assumptions

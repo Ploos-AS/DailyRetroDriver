@@ -12,7 +12,19 @@ SOURCE_CLASSES = {"user_supplied", "freeware", "open_source", "redistributable"}
 CAPABILITIES = {"high_performance_emulation", "nvme", "usb3_storage"}
 CLASSIFICATIONS = {"classic", "modern_retro"}
 QUALIFICATION_STATES = {"unresolved", "candidate", "qualified"}
-EXPERIENCE_KEYS = {"type", "boot_target", "persistent_state", "game_frontend", "host_ui_hidden"}
+EXPERIENCE_KEYS = {"type", "boot_target", "persistent_state", "game_frontend", "host_ui_hidden", "fidelity"}
+FIDELITIES = {"authentic", "enhanced"}
+PROFILE_CAPABILITIES = CAPABILITIES | {"aarch64"}
+ASSESSMENT_STATUSES = {"qualified", "unqualified", "not_recommended", "incompatible", "blocked"}
+ASSESSMENT_REASON_CODES = {
+    "performance_below_target",
+    "emulator_unqualified",
+    "required_asset_missing",
+    "unsupported_host_architecture",
+    "graphics_backend_missing",
+    "storage_unavailable",
+    "configuration_invalid",
+}
 ID_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
 
@@ -63,6 +75,8 @@ def validate_registry(path: Path) -> dict[str, Any]:
         raise ConfigError(f"{path}: experience_defaults must define {sorted(EXPERIENCE_KEYS)}")
     if defaults.get("type") != "microcomputer" or defaults.get("boot_target") != "native_environment":
         raise ConfigError(f"{path}: experience defaults must describe a native microcomputer")
+    if defaults.get("fidelity") not in FIDELITIES:
+        raise ConfigError(f"{path}: experience_defaults.fidelity must be authentic or enhanced")
     for key in ("persistent_state", "game_frontend", "host_ui_hidden"):
         if not isinstance(defaults.get(key), bool):
             raise ConfigError(f"{path}: experience_defaults.{key} must be boolean")
@@ -108,6 +122,8 @@ def validate_registry(path: Path) -> dict[str, Any]:
                 raise ConfigError(f"{path}: family {family_id} experience.type must be microcomputer")
             if key == "boot_target" and value != "native_environment":
                 raise ConfigError(f"{path}: family {family_id} experience.boot_target must be native_environment")
+            if key == "fidelity" and value not in FIDELITIES:
+                raise ConfigError(f"{path}: family {family_id} experience.fidelity is invalid")
             if key in {"persistent_state", "game_frontend", "host_ui_hidden"} and not isinstance(value, bool):
                 raise ConfigError(f"{path}: family {family_id} experience.{key} must be boolean")
         if not isinstance(family.get("menu_order"), int) or family["menu_order"] < 0:
@@ -149,6 +165,8 @@ def validate_profile(path: Path, family_ids: set[str] | None = None) -> dict[str
             raise ConfigError(f"{path}: experience.type must be microcomputer")
         if key == "boot_target" and value != "native_environment":
             raise ConfigError(f"{path}: experience.boot_target must be native_environment")
+        if key == "fidelity" and value not in FIDELITIES:
+            raise ConfigError(f"{path}: experience.fidelity is invalid")
         if key in {"persistent_state", "game_frontend", "host_ui_hidden"} and not isinstance(value, bool):
             raise ConfigError(f"{path}: experience.{key} must be boolean")
     for key in ("machine", "display", "input", "state", "hardware_requirements"):
@@ -156,6 +174,18 @@ def validate_profile(path: Path, family_ids: set[str] | None = None) -> dict[str
             raise ConfigError(f"{path}: {key} must be a mapping")
     if data["display"].get("fullscreen") is not True:
         raise ConfigError(f"{path}: M0 example profiles must default to fullscreen")
+    capabilities = data.get("capabilities", {})
+    if not isinstance(capabilities, dict) or set(capabilities) - {"required", "recommended"}:
+        raise ConfigError(f"{path}: capabilities must define only required/recommended lists")
+    for key in ("required", "recommended"):
+        values = capabilities.get(key, [])
+        if not isinstance(values, list) or not all(isinstance(item, str) for item in values):
+            raise ConfigError(f"{path}: capabilities.{key} must be a list of strings")
+        unknown = set(values) - PROFILE_CAPABILITIES
+        if unknown:
+            raise ConfigError(f"{path}: unknown profile capabilities: {sorted(unknown)}")
+    if set(capabilities.get("required", [])) & set(capabilities.get("recommended", [])):
+        raise ConfigError(f"{path}: a capability cannot be both required and recommended")
     state_dir = data["state"].get("directory", "")
     expected_prefix = f"state/{profile['family']}/"
     if not isinstance(state_dir, str) or not state_dir.startswith(expected_prefix):
@@ -167,6 +197,37 @@ def validate_profile(path: Path, family_ids: set[str] | None = None) -> dict[str
     if not isinstance(required, list) or not set(required).issubset(CAPABILITIES):
         raise ConfigError(f"{path}: unknown required hardware capability")
     return data
+
+
+def validate_runtime_assessment(value: Any, location: str = "runtime_assessment") -> dict[str, Any]:
+    """Validate a dynamic profile/host assessment without measuring performance."""
+    if not isinstance(value, dict):
+        raise ConfigError(f"{location}: assessment must be a mapping")
+    status = value.get("status")
+    if status not in ASSESSMENT_STATUSES:
+        raise ConfigError(f"{location}: invalid status {status!r}")
+    override_allowed = value.get("override_allowed")
+    if not isinstance(override_allowed, bool):
+        raise ConfigError(f"{location}: override_allowed must be boolean")
+    reasons = value.get("reasons", [])
+    if not isinstance(reasons, list) or not all(reason in ASSESSMENT_REASON_CODES for reason in reasons):
+        raise ConfigError(f"{location}: unknown reason code")
+    if status == "blocked" and "performance_below_target" in reasons:
+        raise ConfigError(f"{location}: performance alone cannot produce blocked")
+    if status == "not_recommended" and not override_allowed:
+        raise ConfigError(f"{location}: not_recommended must permit user override")
+    return value
+
+
+def assessment_can_start(value: dict[str, Any], acknowledged: bool = False) -> bool:
+    """Return whether policy permits a start; not_recommended requires acknowledgement."""
+    assessment = validate_runtime_assessment(value)
+    status = assessment["status"]
+    if status in {"qualified", "unqualified"}:
+        return True
+    if status == "not_recommended":
+        return assessment["override_allowed"] and acknowledged
+    return False
 
 
 def validate_manifest(path: Path, profile_ids: set[str]) -> dict[str, Any]:
