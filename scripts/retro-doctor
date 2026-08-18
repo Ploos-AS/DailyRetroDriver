@@ -1,0 +1,135 @@
+#!/usr/bin/env python3
+"""Non-destructive RetroDailyDriver host diagnostics."""
+
+from __future__ import annotations
+
+import argparse
+import os
+from pathlib import Path
+import platform
+import pwd
+import grp
+import stat
+import sys
+
+from retro_config import ConfigError, discover_and_validate, resolve_hardware
+
+RUNTIME_PATHS = ("assets", "profiles", "state", "media", "backups", "logs", "reports")
+
+
+class Reporter:
+    def __init__(self) -> None:
+        self.failures = 0
+
+    def emit(self, status: str, label: str, detail: str) -> None:
+        print(f"{label:.<30} {status:<4}  {detail}")
+        if status == "FAIL":
+            self.failures += 1
+
+
+def os_release(path: Path) -> dict[str, str]:
+    values: dict[str, str] = {}
+    try:
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if "=" in line:
+                key, value = line.split("=", 1)
+                values[key] = value.strip().strip('"')
+    except OSError:
+        pass
+    return values
+
+
+def model_text(path: Path) -> str:
+    try:
+        return path.read_bytes().rstrip(b"\0").decode("utf-8", errors="replace").strip()
+    except OSError:
+        return ""
+
+
+def check_runtime(reporter: Reporter, runtime_root: Path, expected_user: str, expected_group: str) -> None:
+    if not runtime_root.is_dir():
+        reporter.emit("FAIL", "Runtime root", f"missing {runtime_root}; run the M0 playbook")
+        return
+    root_mode = stat.S_IMODE(runtime_root.stat().st_mode)
+    if root_mode & 0o002:
+        reporter.emit("FAIL", "Runtime permissions", f"{runtime_root} is world-writable ({root_mode:04o})")
+    else:
+        reporter.emit("PASS", "Runtime permissions", f"root mode {root_mode:04o} is not world-writable")
+    missing = [name for name in RUNTIME_PATHS if not (runtime_root / name).is_dir()]
+    if missing:
+        reporter.emit("FAIL", "Runtime paths", f"missing: {', '.join(missing)}")
+    else:
+        reporter.emit("PASS", "Runtime paths", f"all {len(RUNTIME_PATHS)} canonical paths exist")
+    try:
+        user_id, group_id = pwd.getpwnam(expected_user).pw_uid, grp.getgrnam(expected_group).gr_gid
+    except KeyError as exc:
+        reporter.emit("FAIL", "Service identity", f"missing account/group: {exc.args[0]}")
+        return
+    mismatches = []
+    for name in RUNTIME_PATHS:
+        path = runtime_root / name
+        expected_uid = 0 if name == "profiles" else user_id
+        if path.exists() and (path.stat().st_uid != expected_uid or path.stat().st_gid != group_id):
+            mismatches.append(name)
+    if mismatches:
+        reporter.emit("FAIL", "Runtime ownership", f"expected root for profiles and {expected_user} for mutable paths, group {expected_group}; mismatch: {', '.join(mismatches)}")
+    else:
+        reporter.emit("PASS", "Runtime ownership", f"profiles root-owned; mutable paths owned by {expected_user}:{expected_group}")
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parent.parent)
+    parser.add_argument("--runtime-root", type=Path, default=Path("/srv/retro-daily-driver"))
+    parser.add_argument("--os-release", type=Path, default=Path("/etc/os-release"), help=argparse.SUPPRESS)
+    parser.add_argument("--model-file", type=Path, default=Path("/proc/device-tree/model"), help=argparse.SUPPRESS)
+    parser.add_argument("--service-user", default="retro", help=argparse.SUPPRESS)
+    parser.add_argument("--service-group", default="retro", help=argparse.SUPPRESS)
+    args = parser.parse_args(argv)
+    reporter = Reporter()
+    print("RetroDailyDriver M0 doctor (non-destructive)\n")
+
+    release = os_release(args.os_release)
+    os_family = {release.get("ID", ""), *release.get("ID_LIKE", "").split()}
+    if os_family & {"debian", "dietpi"}:
+        reporter.emit("PASS", "OS family", release.get("PRETTY_NAME", "Debian family"))
+    else:
+        reporter.emit("FAIL", "OS family", f"DietPi/Debian required; detected {release.get('PRETTY_NAME', 'unknown')}")
+
+    architecture = platform.machine().lower()
+    if architecture in {"aarch64", "arm64"}:
+        reporter.emit("PASS", "Architecture", architecture)
+    else:
+        reporter.emit("WARN", "Architecture", f"{architecture}; appliance target is 64-bit ARM")
+
+    try:
+        hardware, profiles = discover_and_validate(args.repo_root.resolve())
+        reporter.emit("PASS", "Configuration", f"{len(hardware)} hardware, {len(profiles)} appliance profiles")
+    except ConfigError as exc:
+        reporter.emit("FAIL", "Configuration", str(exc))
+        hardware = []
+
+    model = model_text(args.model_file)
+    if not model:
+        reporter.emit("WARN", "Raspberry Pi model", "firmware model is unavailable (normal on development hosts)")
+    else:
+        reporter.emit("PASS", "Raspberry Pi model", model)
+    resolved = resolve_hardware(model, hardware) if model else None
+    if resolved:
+        caps = ", ".join(key for key, value in resolved["capabilities"].items() if value is True)
+        reporter.emit("PASS", "Hardware profile", f"{resolved['hardware']['id']} ({caps})")
+    else:
+        reporter.emit("WARN", "Hardware profile", "unresolved; add or select a matching hardware profile")
+
+    check_runtime(reporter, args.runtime_root, args.service_user, args.service_group)
+    print("\nEmulator checks are intentionally deferred until M3-M5.")
+    print(f"Summary: {'FAIL' if reporter.failures else 'PASS'} ({reporter.failures} failure(s))")
+    return 1 if reporter.failures else 0
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main())
+    except KeyboardInterrupt:
+        print("Interrupted", file=sys.stderr)
+        raise SystemExit(130)

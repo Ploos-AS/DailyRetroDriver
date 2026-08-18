@@ -1,0 +1,19 @@
+---
+schema_version: 1
+hardware:
+  id: raspberry-pi-500-plus
+  name: Raspberry Pi 500+
+  model_match:
+    contains: [Raspberry Pi 500 Plus, Raspberry Pi 500+]
+  soc_family: bcm2712
+  architecture: aarch64
+  memory_baseline_mb: 16384
+capabilities:
+  high_performance_emulation: true
+  nvme: true
+  usb3_storage: true
+  workload_classes: [amiga-standard, amiga-enhanced, atari-st-ste, commodore-8bit]
+storage:
+  preferred: nvme
+  fallbacks: [usb3-ssd, sd-card]
+  notes: Prefer integrated NVMe when it is present and healthy.

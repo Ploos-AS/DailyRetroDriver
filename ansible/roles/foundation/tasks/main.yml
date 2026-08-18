@@ -1,0 +1,125 @@
+---
+- name: Install M0 foundation packages
+  ansible.builtin.apt:
+    name: "{{ retro_foundation_packages }}"
+    state: present
+    update_cache: false
+
+- name: Create RetroDailyDriver groups
+  ansible.builtin.group:
+    name: "{{ item }}"
+    system: true
+    state: present
+  loop:
+    - "{{ retro_group }}"
+    - "{{ retro_admin_group }}"
+
+- name: Create unprivileged appliance account
+  ansible.builtin.user:
+    name: "{{ retro_user }}"
+    group: "{{ retro_group }}"
+    system: true
+    create_home: false
+    home: "{{ retro_root }}"
+    shell: /usr/sbin/nologin
+    state: present
+
+- name: Create canonical runtime root
+  ansible.builtin.file:
+    path: "{{ retro_root }}"
+    state: directory
+    owner: root
+    group: "{{ retro_group }}"
+    mode: "0750"
+
+- name: Create canonical runtime directories
+  ansible.builtin.file:
+    path: "{{ retro_root }}/{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner | default(retro_user) }}"
+    group: "{{ retro_group }}"
+    mode: "{{ item.mode }}"
+  loop: "{{ retro_runtime_directories }}"
+
+- name: Create configuration root
+  ansible.builtin.file:
+    path: "{{ retro_config_root }}"
+    state: directory
+    owner: root
+    group: "{{ retro_group }}"
+    mode: "0750"
+
+- name: Deploy hardware profiles
+  ansible.builtin.copy:
+    src: "{{ retro_project_root }}/hardware/"
+    dest: "{{ retro_config_root }}/hardware/"
+    owner: root
+    group: "{{ retro_group }}"
+    mode: "0640"
+    directory_mode: "0750"
+
+- name: Deploy appliance profiles
+  ansible.builtin.copy:
+    src: "{{ retro_project_root }}/profiles/"
+    dest: "{{ retro_config_root }}/profiles/"
+    owner: root
+    group: "{{ retro_group }}"
+    mode: "0640"
+    directory_mode: "0750"
+
+- name: Read Raspberry Pi model when exposed by firmware
+  ansible.builtin.slurp:
+    src: /proc/device-tree/model
+  register: retro_device_model_raw
+  failed_when: false
+  changed_when: false
+
+- name: Record hardware detection facts
+  ansible.builtin.set_fact:
+    retro_detected_model: >-
+      {{ (retro_device_model_raw.content | default('') | b64decode |
+          replace('\u0000', '') | trim) or 'unknown' }}
+    retro_detected_architecture: "{{ ansible_facts.architecture }}"
+
+- name: Resolve supported hardware profile from declarative model aliases
+  ansible.builtin.set_fact:
+    retro_hardware_profile: "{{ (lookup('ansible.builtin.file', item) | from_yaml).hardware.id }}"
+    retro_hardware_capabilities: "{{ (lookup('ansible.builtin.file', item) | from_yaml).capabilities }}"
+  loop: "{{ query('ansible.builtin.fileglob', retro_project_root + '/hardware/*.yml') | sort }}"
+  when: >-
+    (lookup('ansible.builtin.file', item) | from_yaml).hardware.model_match.contains
+    | select('in', retro_detected_model) | list | length > 0
+  loop_control:
+    label: "{{ item | basename }}"
+
+- name: Persist detected host facts for auditing
+  ansible.builtin.copy:
+    dest: "{{ retro_config_root }}/detected-host.yml"
+    owner: root
+    group: "{{ retro_group }}"
+    mode: "0640"
+    content: >-
+      {{ {'architecture': retro_detected_architecture,
+          'model': retro_detected_model,
+          'hardware_profile': retro_hardware_profile | default('unresolved'),
+          'capabilities': retro_hardware_capabilities | default({})}
+         | to_nice_yaml(indent=2, sort_keys=true) }}
+
+- name: Validate foundation directories
+  ansible.builtin.stat:
+    path: "{{ retro_root }}/{{ item.path }}"
+  loop: "{{ retro_runtime_directories }}"
+  register: retro_directory_stats
+  changed_when: false
+
+- name: Assert foundation directory ownership and modes
+  ansible.builtin.assert:
+    that:
+      - item.stat.isdir
+      - item.stat.pw_name == (item.item.owner | default(retro_user))
+      - item.stat.gr_name == retro_group
+      - item.stat.mode == item.item.mode
+    fail_msg: "Invalid runtime directory: {{ item.item.path }}"
+  loop: "{{ retro_directory_stats.results }}"
+  loop_control:
+    label: "{{ item.item.path }}"

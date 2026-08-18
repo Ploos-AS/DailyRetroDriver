@@ -1,0 +1,5 @@
+---
+- name: Record appliance manager M0 boundary
+  ansible.builtin.debug:
+    msg: The launcher and session supervisor begin in M2.
+    verbosity: 1

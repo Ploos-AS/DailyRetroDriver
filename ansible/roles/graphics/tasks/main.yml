@@ -1,0 +1,5 @@
+---
+- name: Record graphics role M0 boundary
+  ansible.builtin.debug:
+    msg: Graphics, audio, and input provisioning begins in M1.
+    verbosity: 1

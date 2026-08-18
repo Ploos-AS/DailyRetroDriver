@@ -1,0 +1,19 @@
+---
+schema_version: 1
+hardware:
+  id: raspberry-pi-500
+  name: Raspberry Pi 500
+  model_match:
+    contains: [Raspberry Pi 500 Rev]
+  soc_family: bcm2712
+  architecture: aarch64
+  memory_baseline_mb: 8192
+capabilities:
+  high_performance_emulation: true
+  nvme: false
+  usb3_storage: true
+  workload_classes: [amiga-standard, amiga-enhanced, atari-st-ste, commodore-8bit]
+storage:
+  preferred: usb3-ssd
+  fallbacks: [sd-card]
+  notes: Pi 5-class performance; do not assume integrated NVMe capability.

@@ -1,0 +1,37 @@
+---
+schema_version: 1
+profile:
+  id: amiga-a1200
+  family: amiga
+  title: Amiga A1200
+  emulator: amiberry
+  maturity: example
+machine:
+  model: a1200
+  cpu: m68020
+  chipset: aga
+  chip_ram_mb: 2
+  fast_ram_mb: 8
+display:
+  fullscreen: true
+  aspect_policy: preserve
+  integer_scaling: preferred
+input:
+  keyboard: host
+  pointer: mouse
+  game_ports: auto
+assets:
+  - id: amiga-kickstart-a1200
+    purpose: firmware
+    required: true
+    source: user_supplied
+  - id: amiga-system-volume
+    purpose: operating_system
+    required: false
+    source: user_supplied
+state:
+  directory: state/amiga/amiga-a1200
+  mutable: [emulator-config, nvram, save-data]
+hardware_requirements:
+  all: [usb3_storage]
+  preferred: [high_performance_emulation]

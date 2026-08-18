@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+"""Validate all versioned M0 configuration documents."""
+
+from pathlib import Path
+import sys
+
+from retro_config import ConfigError, discover_and_validate
+
+
+def main() -> int:
+    root = Path(__file__).resolve().parent.parent
+    try:
+        hardware, profiles = discover_and_validate(root)
+    except ConfigError as exc:
+        print(f"FAIL configuration: {exc}", file=sys.stderr)
+        return 1
+    print(f"PASS configuration: {len(hardware)} hardware and {len(profiles)} appliance profiles")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

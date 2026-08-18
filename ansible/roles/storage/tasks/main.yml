@@ -1,0 +1,5 @@
+---
+- name: Record storage role M0 boundary
+  ansible.builtin.debug:
+    msg: Storage discovery is documented in M0; migration is disabled.
+    verbosity: 1

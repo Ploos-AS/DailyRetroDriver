@@ -1,0 +1,34 @@
+---
+schema_version: 1
+profile:
+  id: commodore-c64
+  family: commodore
+  title: Commodore 64
+  emulator: vice
+  maturity: example
+machine:
+  model: c64
+  video_standard: pal
+  ram_kb: 64
+display:
+  fullscreen: true
+  aspect_policy: preserve
+  integer_scaling: preferred
+input:
+  keyboard: positional
+  joystick_ports: auto
+assets:
+  - id: c64-application-media
+    purpose: software_media
+    required: false
+    source: user_supplied
+  - id: jiffydos-c64
+    purpose: optional_firmware
+    required: false
+    source: user_supplied
+state:
+  directory: state/commodore/commodore-c64
+  mutable: [emulator-config, save-data]
+hardware_requirements:
+  all: []
+  preferred: []

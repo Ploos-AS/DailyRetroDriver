@@ -1,0 +1,24 @@
+---
+retro_root: /srv/retro-daily-driver
+retro_config_root: /etc/retro-daily-driver
+retro_user: retro
+retro_group: retro
+retro_admin_group: retro-admin
+retro_foundation_packages:
+  - ca-certificates
+  - python3
+  - rsync
+retro_runtime_directories:
+  - { path: assets, mode: "0750" }
+  - { path: profiles, mode: "0750", owner: root }
+  - { path: state, mode: "0750" }
+  - { path: state/amiga, mode: "0750" }
+  - { path: state/atari, mode: "0750" }
+  - { path: state/commodore, mode: "0750" }
+  - { path: media, mode: "0750" }
+  - { path: media/amiga, mode: "0750" }
+  - { path: media/atari, mode: "0750" }
+  - { path: media/commodore, mode: "0750" }
+  - { path: backups, mode: "0750" }
+  - { path: logs, mode: "0750" }
+  - { path: reports, mode: "0750" }

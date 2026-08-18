@@ -1,0 +1,10 @@
+*.py[cod]
+__pycache__/
+.pytest_cache/
+.venv/
+.ansible/
+ansible/inventory/hosts.yml
+*.retry
+reports/
+assets/local/
+assets/manifest.yml

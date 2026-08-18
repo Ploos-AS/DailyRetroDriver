@@ -1,0 +1,36 @@
+---
+schema_version: 1
+profile:
+  id: atari-ste
+  family: atari
+  title: Atari STE
+  emulator: hatari
+  maturity: example
+machine:
+  model: ste
+  cpu: m68000
+  cpu_clock_mhz: 8
+  ram_mb: 4
+display:
+  fullscreen: true
+  aspect_policy: preserve
+  integer_scaling: preferred
+input:
+  keyboard: host
+  pointer: mouse
+  joystick: auto
+assets:
+  - id: atari-tos-ste
+    purpose: firmware
+    required: true
+    source: user_supplied
+  - id: emutos-ste
+    purpose: open_firmware_alternative
+    required: false
+    source: open_source
+state:
+  directory: state/atari/atari-ste
+  mutable: [emulator-config, nvram, save-data]
+hardware_requirements:
+  all: []
+  preferred: []

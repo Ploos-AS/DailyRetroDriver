@@ -1,0 +1,29 @@
+#!/usr/bin/env python3
+"""Check repository invariants which are independent of a provisioned host."""
+
+from pathlib import Path
+import sys
+
+REQUIRED = [
+    "README.md", "LICENSE", "Makefile", "docs/ARCHITECTURE.md",
+    "docs/ROADMAP.md", "docs/STORAGE.md", "docs/ASSETS.md",
+    "ansible/playbooks/provision.yml", "scripts/retro-doctor",
+]
+FORBIDDEN_SUFFIXES = {".adf", ".d64", ".hdf", ".ipf", ".rom", ".st", ".tos"}
+
+
+def main() -> int:
+    root = Path(__file__).resolve().parent.parent
+    missing = [name for name in REQUIRED if not (root / name).is_file()]
+    forbidden = [str(path.relative_to(root)) for path in root.rglob("*") if path.is_file() and path.suffix.lower() in FORBIDDEN_SUFFIXES and ".git" not in path.parts]
+    errors = [*(f"missing {name}" for name in missing), *(f"proprietary asset candidate committed: {name}" for name in forbidden)]
+    if errors:
+        for error in errors:
+            print(f"FAIL repository: {error}", file=sys.stderr)
+        return 1
+    print("PASS repository invariants")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

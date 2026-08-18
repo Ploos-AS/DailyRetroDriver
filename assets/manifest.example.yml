@@ -1,0 +1,33 @@
+---
+schema_version: 1
+manifest:
+  id: example-user-assets
+  description: Example only; replace paths and hashes with locally owned assets.
+assets:
+  - id: amiga-kickstart-a1200
+    path: amiga/firmware/kick40068.A1200
+    sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    requirement: required
+    source:
+      classification: user_supplied
+      provenance: Acquired by the user from a lawfully owned source.
+      license_reference: null
+    profiles: [amiga-a1200]
+  - id: emutos-ste
+    path: atari/firmware/emutos.img
+    sha256: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    requirement: optional
+    source:
+      classification: open_source
+      provenance: Obtain from the official EmuTOS project release.
+      license_reference: docs/licenses/EmuTOS.txt
+    profiles: [atari-ste]
+  - id: c64-application-media
+    path: commodore/media/example.d64
+    sha256: cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+    requirement: optional
+    source:
+      classification: user_supplied
+      provenance: Created from media owned by the user.
+      license_reference: null
+    profiles: [commodore-c64]

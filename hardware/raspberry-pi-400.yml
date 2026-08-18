@@ -1,0 +1,19 @@
+---
+schema_version: 1
+hardware:
+  id: raspberry-pi-400
+  name: Raspberry Pi 400
+  model_match:
+    contains: [Raspberry Pi 400]
+  soc_family: bcm2711
+  architecture: aarch64
+  memory_baseline_mb: 4096
+capabilities:
+  high_performance_emulation: false
+  nvme: false
+  usb3_storage: true
+  workload_classes: [amiga-standard, atari-st-ste, commodore-8bit]
+storage:
+  preferred: usb3-ssd
+  fallbacks: [sd-card]
+  notes: No built-in NVMe; use a USB 3 SSD for persistent data.
