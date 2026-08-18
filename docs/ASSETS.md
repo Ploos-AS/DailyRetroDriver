@@ -23,5 +23,7 @@ Supported source classifications are:
 Classification alone is not proof. Preserve a license reference or provenance
 note and review the actual terms. Open alternatives such as EmuTOS may be
 supported as optional assets without forcing them over a user's lawful original
-firmware. `assets/manifest.example.yml` contains placeholder hashes only; local
+firmware. Atari 8-bit firmware, Spectrum ROMs, and MSX machine firmware are
+represented as user-supplied concepts in the example manifest only.
+`assets/manifest.example.yml` contains placeholder hashes only; local
 manifests and asset payloads are ignored by Git.

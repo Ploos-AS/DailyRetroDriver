@@ -8,6 +8,7 @@ REQUIRED = [
     "README.md", "LICENSE", "Makefile", "docs/ARCHITECTURE.md",
     "docs/ROADMAP.md", "docs/STORAGE.md", "docs/ASSETS.md",
     "ansible/playbooks/provision.yml", "scripts/retro-doctor",
+    "families/registry.yml",
 ]
 FORBIDDEN_SUFFIXES = {".adf", ".d64", ".hdf", ".ipf", ".rom", ".st", ".tos"}
 

@@ -32,6 +32,17 @@
     group: "{{ retro_group }}"
     mode: "0750"
 
+- name: Load declarative family registry
+  ansible.builtin.set_fact:
+    retro_family_registry: "{{ lookup('ansible.builtin.file', retro_project_root + '/families/registry.yml') | from_yaml }}"
+
+- name: Extend runtime directories for registered families
+  ansible.builtin.set_fact:
+    retro_runtime_directories: "{{ retro_runtime_directories + [{'path': 'state/' + item.id, 'mode': '0750'}, {'path': 'media/' + item.id, 'mode': '0750'}] }}"
+  loop: "{{ retro_family_registry.families }}"
+  loop_control:
+    label: "{{ item.id }}"
+
 - name: Create canonical runtime directories
   ansible.builtin.file:
     path: "{{ retro_root }}/{{ item.path }}"
@@ -66,6 +77,14 @@
     group: "{{ retro_group }}"
     mode: "0640"
     directory_mode: "0750"
+
+- name: Deploy family registry
+  ansible.builtin.copy:
+    src: "{{ retro_project_root }}/families/registry.yml"
+    dest: "{{ retro_config_root }}/families.yml"
+    owner: root
+    group: "{{ retro_group }}"
+    mode: "0640"
 
 - name: Read Raspberry Pi model when exposed by firmware
   ansible.builtin.slurp:

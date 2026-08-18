@@ -1,0 +1,27 @@
+---
+schema_version: 1
+profile:
+  id: spectrum-128k
+  family: spectrum
+  title: ZX Spectrum 128K
+  emulator: fuse
+  maturity: example
+machine:
+  model: spectrum-128k
+  ram_kb: 128
+display:
+  fullscreen: true
+  aspect_policy: preserve
+input:
+  keyboard: host
+assets:
+  - id: spectrum-128k-rom
+    purpose: firmware
+    required: true
+    source: user_supplied
+state:
+  directory: state/spectrum/spectrum-128k
+  mutable: [emulator-config, save-data]
+hardware_requirements:
+  all: []
+  preferred: []

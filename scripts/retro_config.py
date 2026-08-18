@@ -8,7 +8,6 @@ from typing import Any
 
 import yaml
 
-FAMILIES = {"amiga", "atari", "commodore"}
 SOURCE_CLASSES = {"user_supplied", "freeware", "open_source", "redistributable"}
 CAPABILITIES = {"high_performance_emulation", "nvme", "usb3_storage"}
 ID_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -53,16 +52,47 @@ def validate_hardware(path: Path) -> dict[str, Any]:
     return data
 
 
-def validate_profile(path: Path) -> dict[str, Any]:
+def validate_registry(path: Path) -> dict[str, Any]:
+    data = load_yaml(path)
+    families = data.get("families")
+    if not isinstance(families, list) or not families:
+        raise ConfigError(f"{path}: families must be a non-empty list")
+    seen: set[str] = set()
+    menu_orders: set[int] = set()
+    for family in families:
+        if not isinstance(family, dict):
+            raise ConfigError(f"{path}: each family must be a mapping")
+        family_id = family.get("id")
+        _require_id(family_id, f"{path}: family.id")
+        if family_id in seen:
+            raise ConfigError(f"{path}: duplicate family ID {family_id}")
+        seen.add(family_id)
+        for key in ("name", "canonical_profile", "planned_emulator"):
+            if not isinstance(family.get(key), str) or not family[key]:
+                raise ConfigError(f"{path}: family {family_id} requires {key}")
+        if not isinstance(family.get("menu_order"), int) or family["menu_order"] < 0:
+            raise ConfigError(f"{path}: family {family_id} has invalid menu_order")
+        if family["menu_order"] in menu_orders:
+            raise ConfigError(f"{path}: duplicate menu_order {family['menu_order']}")
+        menu_orders.add(family["menu_order"])
+        if family.get("status") not in {"enabled", "experimental", "disabled"}:
+            raise ConfigError(f"{path}: family {family_id} has invalid status")
+    return data
+
+
+def load_family_registry(root: Path) -> dict[str, Any]:
+    """Load the declarative family registry for consumers such as the launcher."""
+    return validate_registry(root / "families" / "registry.yml")
+
+
+def validate_profile(path: Path, family_ids: set[str] | None = None) -> dict[str, Any]:
     data = load_yaml(path)
     profile = data.get("profile")
     if not isinstance(profile, dict):
         raise ConfigError(f"{path}: profile must be a mapping")
     profile_id = profile.get("id")
     _require_id(profile_id, f"{path}: profile.id")
-    if profile_id != path.stem:
-        raise ConfigError(f"{path}: profile.id must match filename")
-    if profile.get("family") not in FAMILIES:
+    if family_ids is not None and profile.get("family") not in family_ids:
         raise ConfigError(f"{path}: unknown appliance family")
     if path.parent.name != profile["family"]:
         raise ConfigError(f"{path}: profile directory must match family")
@@ -113,12 +143,25 @@ def validate_manifest(path: Path, profile_ids: set[str]) -> dict[str, Any]:
 
 
 def discover_and_validate(root: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    registry = load_family_registry(root)
+    families = registry["families"]
+    family_ids = {item["id"] for item in families}
     hardware = [validate_hardware(path) for path in sorted((root / "hardware").glob("*.yml"))]
-    profiles = [validate_profile(path) for path in sorted((root / "profiles").glob("*/*.yml"))]
+    profiles = [validate_profile(path, family_ids) for path in sorted((root / "profiles").glob("*/*.yml"))]
     if not hardware or not profiles:
         raise ConfigError("configuration requires hardware and appliance profiles")
-    ids = {item["profile"]["id"] for item in profiles}
-    validate_manifest(root / "assets" / "manifest.example.yml", ids)
+    profile_ids = {item["profile"]["id"] for item in profiles}
+    if len(profile_ids) != len(profiles):
+        raise ConfigError("configuration contains duplicate profile IDs")
+    for family in families:
+        if family["canonical_profile"] not in profile_ids:
+            raise ConfigError(f"family {family['id']} references unknown canonical profile {family['canonical_profile']}")
+        canonical = next(item for item in profiles if item["profile"]["id"] == family["canonical_profile"])
+        if canonical["profile"]["family"] != family["id"]:
+            raise ConfigError(f"family {family['id']} canonical profile belongs to another family")
+        if canonical["profile"].get("emulator") != family["planned_emulator"]:
+            raise ConfigError(f"family {family['id']} planned emulator disagrees with canonical profile")
+    validate_manifest(root / "assets" / "manifest.example.yml", profile_ids)
     return hardware, profiles
 
 
@@ -127,3 +170,12 @@ def resolve_hardware(model: str, hardware: list[dict[str, Any]]) -> dict[str, An
     if len(matches) > 1:
         matches.sort(key=lambda item: max(map(len, item["hardware"]["model_match"]["contains"])), reverse=True)
     return matches[0] if matches else None
+
+
+def resolve_canonical_profiles(registry: dict[str, Any], profiles: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Return canonical profiles keyed by family ID, without family allow-lists."""
+    by_id = {item["profile"]["id"]: item for item in profiles}
+    return {
+        family["id"]: by_id[family["canonical_profile"]]
+        for family in registry["families"]
+    }

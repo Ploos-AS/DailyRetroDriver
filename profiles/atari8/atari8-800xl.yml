@@ -1,0 +1,28 @@
+---
+schema_version: 1
+profile:
+  id: atari8-800xl
+  family: atari8
+  title: Atari 800XL
+  emulator: atari800
+  maturity: example
+machine:
+  model: 800xl
+  ram_kb: 64
+display:
+  fullscreen: true
+  aspect_policy: preserve
+input:
+  keyboard: host
+  joystick: auto
+assets:
+  - id: atari8-firmware
+    purpose: firmware
+    required: true
+    source: user_supplied
+state:
+  directory: state/atari8/atari8-800xl
+  mutable: [emulator-config, save-data]
+hardware_requirements:
+  all: []
+  preferred: []

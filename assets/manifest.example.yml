@@ -31,3 +31,30 @@ assets:
       provenance: Created from media owned by the user.
       license_reference: null
     profiles: [commodore-c64]
+  - id: atari8-firmware
+    path: atari8/firmware/800xl.rom
+    sha256: dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+    requirement: required
+    source:
+      classification: user_supplied
+      provenance: Firmware supplied by the user from a lawfully owned source.
+      license_reference: null
+    profiles: [atari8-800xl]
+  - id: spectrum-128k-rom
+    path: spectrum/firmware/spectrum-128k.rom
+    sha256: eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+    requirement: required
+    source:
+      classification: user_supplied
+      provenance: Firmware supplied by the user from a lawfully owned source.
+      license_reference: null
+    profiles: [spectrum-128k]
+  - id: msx2-machine-firmware
+    path: msx/firmware/msx2.rom
+    sha256: ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    requirement: required
+    source:
+      classification: user_supplied
+      provenance: Machine firmware supplied by the user from a lawfully owned source.
+      license_reference: null
+    profiles: [msx-msx2]

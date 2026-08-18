@@ -15,8 +15,8 @@ state:
 /srv/retro-daily-driver/
 ├── assets/                 # user-owned inputs, indexed by manifests
 ├── profiles/               # materialized, reproducible profile data
-├── state/{amiga,atari,commodore}/
-├── media/{amiga,atari,commodore}/
+├── state/{amiga,atari,commodore,atari8,spectrum,msx}/
+├── media/{amiga,atari,commodore,atari8,spectrum,msx}/
 ├── backups/
 ├── logs/
 └── reports/
@@ -50,29 +50,60 @@ silently receiving guessed policy.
 
 ## Profile resolution
 
+The declarative family registry in `families/registry.yml` is the
+launcher-facing catalog. It supplies a stable family ID, display name,
+canonical profile, planned emulator, menu order, and lifecycle status. Generic
+code consumes this registry; it does not contain a family allow-list. The six
+enabled M0.1 entries are Amiga, Atari ST / TT / Falcon, Commodore 8-bit, Atari
+8-bit, ZX Spectrum, and MSX. Experimental candidates (Commander X16, BBC Micro
+/ Master, Apple II, and Acorn Archimedes) are documented but intentionally
+absent from the active registry until their emulator and asset choices are
+evaluated.
+
 An appliance profile declares its family and emulator boundary, virtual machine
 parameters, display and input policy, asset references, mutable-state location,
 and required/preferred hardware capabilities. Resolution will follow this order:
 
 1. detect a host and produce its capability set;
-2. load and validate a selected appliance profile;
+2. load the family registry and validate a selected appliance profile;
 3. reject missing `hardware_requirements.all` capabilities;
 4. resolve logical assets through the local manifest and verify checksums;
 5. render emulator-specific configuration into a session workspace;
 6. start the emulator under supervision.
 
-M0 implements document validation and hardware resolution only. Emulator
-adapters will own translation from the generic profile contract into Amiberry,
-Hatari, or VICE configuration; generic code will not manipulate emulator flags.
+M0.1 implements document validation, registry resolution, and hardware
+resolution only. The conceptual dependency is
+`family -> profile -> emulator adapter -> session`. Emulator adapters will own
+translation from the generic profile contract into Amiberry, Hatari, VICE,
+Atari800, Fuse, or openMSX configuration; generic code will not manipulate
+emulator flags. A new family can exist in the catalog before its adapter is
+implemented.
 
 ## Expected boot and session flow
 
 After host initialization, a future dedicated graphical session will start a
-small appliance manager. It will validate configuration and assets, present
-eligible profiles, launch exactly one fullscreen emulator, collect logs, and
-return to the selector on a clean exit or crash. A session supervisor will
-enforce process ownership and recovery. Linux administration remains available
-on a separate console or explicitly enabled administrative path.
+small appliance manager. Its conceptual top-level menu is:
+
+```text
+RETRO DAILY DRIVER
+
+Amiga
+Atari ST / TT / Falcon
+Commodore
+Atari 8-bit
+ZX Spectrum
+MSX
+More...
+Administration
+```
+
+The manager will derive this menu from the family registry and profile
+eligibility, not literal F1-F10 bindings. It will validate configuration and
+assets, present eligible profiles, launch exactly one fullscreen emulator,
+collect logs, and return to the selector on a clean exit or crash. A session
+supervisor will enforce process ownership and recovery. Linux administration
+remains available on a separate console or explicitly enabled administrative
+path.
 
 No launcher, graphical session, supervisor, or emulator is implemented in M0.
 

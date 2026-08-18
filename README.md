@@ -5,17 +5,21 @@ Raspberry Pi keyboard computers. The host is infrastructure: later milestones
 will boot into a small machine selector and run a selected emulator fullscreen,
 while keeping Linux administration separate.
 
-## M0 status
+## M0 / M0.1 status
 
 M0 establishes the repository contracts, hardware and appliance profile
 schemas, asset manifest format, DietPi/Debian provisioning foundation, and a
-non-destructive diagnostic tool. It does **not** install or launch emulators,
+non-destructive diagnostic tool. M0.1 generalizes family handling through a
+declarative registry and adds Atari 8-bit, ZX Spectrum, and MSX profiles. It
+does **not** install or launch emulators,
 ROMs, operating systems, or a graphical interface.
 
 Initial hardware targets are Raspberry Pi 400, Raspberry Pi 500, and Raspberry
-Pi 500+. Planned appliance families are Amiga with Amiberry, Atari with Hatari,
-and Commodore 8-bit with VICE. The example personalities are A1200/AmigaOS 3.x,
-Atari STE, and Commodore 64, but their emulator stacks are deferred.
+Pi 500+. The six first-class platform families are Amiga (Amiberry), Atari ST /
+TT / Falcon (Hatari), Commodore 8-bit (VICE), Atari 8-bit (Atari800), ZX
+Spectrum (Fuse), and MSX (openMSX). Their canonical example profiles are
+A1200, STE, C64, 800XL, 128K, and MSX2 respectively; emulator stacks remain
+deferred.
 
 DietPi is used as a small, Debian-compatible base whose package and service
 surface can be provisioned declaratively. It is not intended to be the visible
@@ -57,6 +61,10 @@ identity and integrity, **not** permission to distribute a work. See
 
 Architecture, storage policy, and milestone acceptance criteria are documented
 under [`docs/`](docs/).
+
+Family metadata and menu ordering are declarative in
+[`families/registry.yml`](families/registry.yml). Adding a family requires a
+registry entry and profiles, not a Python allow-list or launcher code change.
 
 ## License
 

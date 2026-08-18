@@ -1,0 +1,26 @@
+---
+schema_version: 1
+profile:
+  id: msx-msx2
+  family: msx
+  title: MSX2
+  emulator: openmsx
+  maturity: example
+machine:
+  model: msx2
+display:
+  fullscreen: true
+  aspect_policy: preserve
+input:
+  keyboard: host
+assets:
+  - id: msx2-machine-firmware
+    purpose: machine_firmware
+    required: true
+    source: user_supplied
+state:
+  directory: state/msx/msx-msx2
+  mutable: [emulator-config, save-data]
+hardware_requirements:
+  all: []
+  preferred: []
