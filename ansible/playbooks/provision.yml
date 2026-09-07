@@ -1,5 +1,5 @@
 ---
-- name: Provision RetroDailyDriver M0 foundation
+- name: Provision Daily Retro Driver foundation
   hosts: all
   become: true
   gather_facts: true
@@ -11,7 +11,7 @@
         that:
           - ansible_facts.os_family == 'Debian'
         fail_msg: >-
-          RetroDailyDriver supports DietPi and compatible Debian-family hosts;
+          Daily Retro Driver supports DietPi and compatible Debian-family hosts;
           detected {{ ansible_facts.os_family | default('unknown') }}.
 
   roles:
