@@ -1,10 +1,10 @@
 PYTHON ?= python3
 ANSIBLE_PLAYBOOK ?= ansible-playbook
 ANSIBLE_CONFIG := $(CURDIR)/ansible/ansible.cfg
-ANSIBLE_LOCAL_TEMP ?= /tmp/retro-daily-driver-ansible
+ANSIBLE_LOCAL_TEMP ?= /tmp/daily-retro-driver-ansible
 INVENTORY := ansible/inventory/hosts.example.yml
 PLAYBOOK := ansible/playbooks/provision.yml
-QUALIFICATION_OUTPUT ?= /srv/retro-daily-driver/reports/m1.1-pi400.json
+QUALIFICATION_OUTPUT ?= /srv/daily-retro-driver/reports/m1.1-pi400.json
 
 .PHONY: check lint syntax test doctor qualify-pi400
 
@@ -24,7 +24,7 @@ test:
 	$(PYTHON) -m unittest discover -s tests -v
 
 doctor:
-	./scripts/retro-doctor --repo-root .
+	./scripts/drd-doctor --repo-root .
 
 qualify-pi400:
-	$(PYTHON) scripts/retro-qualify-host --output $(QUALIFICATION_OUTPUT)
+	$(PYTHON) scripts/drd-qualify-host --output $(QUALIFICATION_OUTPUT)
