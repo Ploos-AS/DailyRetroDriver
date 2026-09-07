@@ -4,8 +4,9 @@ ANSIBLE_CONFIG := $(CURDIR)/ansible/ansible.cfg
 ANSIBLE_LOCAL_TEMP ?= /tmp/retro-daily-driver-ansible
 INVENTORY := ansible/inventory/hosts.example.yml
 PLAYBOOK := ansible/playbooks/provision.yml
+QUALIFICATION_OUTPUT ?= /srv/retro-daily-driver/reports/m1.1-pi400.json
 
-.PHONY: check lint syntax test doctor
+.PHONY: check lint syntax test doctor qualify-pi400
 
 check: lint syntax test
 	$(PYTHON) -m compileall -q scripts tests
@@ -24,3 +25,6 @@ test:
 
 doctor:
 	./scripts/retro-doctor --repo-root .
+
+qualify-pi400:
+	$(PYTHON) scripts/retro-qualify-host --output $(QUALIFICATION_OUTPUT)
