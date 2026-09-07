@@ -1,8 +1,8 @@
 # Storage policy
 
-RetroDailyDriver separates the replaceable host OS, auditable assets, and
-mutable state. `/etc/retro-daily-driver` can be reconstructed from versioned
-configuration. `/srv/retro-daily-driver/assets`, `media`, and `state` cannot be
+Daily Retro Driver separates the replaceable host OS, auditable assets, and
+mutable state. `/etc/daily-retro-driver` can be reconstructed from versioned
+configuration. `/srv/daily-retro-driver/assets`, `media`, and `state` cannot be
 assumed reproducible and require backups; manifests and reports should be backed
 up with them. Backups should be stored on a different device, with restore tests
 and filesystem-level consistency handled in M6.
