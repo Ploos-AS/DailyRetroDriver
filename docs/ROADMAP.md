@@ -34,6 +34,18 @@ startable with acknowledgement; performance cannot create `blocked`; emulator
 qualification remains distinct from host/profile assessment; and no benchmark,
 emulator, launcher, or frontend is implemented.
 
+## M0.4 — Daily Retro Driver identity migration (complete)
+
+Rename the product and canonical runtime identity before physical qualification.
+The product is **Daily Retro Driver (DRD)**, the repository is
+`Ploos-AS/DailyRetroDriver`, runtime/configuration roots are
+`/srv/daily-retro-driver` and `/etc/daily-retro-driver`, and the service identity
+is `drd:drd` with `drd-admin` reserved for administrators. Canonical diagnostic
+and qualification commands are `drd-doctor` and `drd-qualify-host`. Former
+`retro-*` command names may exist only as deprecated compatibility aliases and
+must not be used for qualification evidence. Acceptance: no M1.1 evidence is
+created under the former product name, runtime paths, or service identity.
+
 ## M1 — reproducible host foundation
 
 Provision pinned graphics, audio, and input dependencies; define the dedicated
@@ -45,9 +57,9 @@ Pi 400, Pi 500, and Pi 500+. A second provisioning run must be clean.
 Make Pi 400 the first physical reference host. Provide a non-destructive,
 machine-readable qualification harness for DietPi/Debian identity, ARM64,
 hardware identity, DRM/KMS visibility, evdev input, ALSA evidence, and session
-prerequisites. Acceptance requires a real Pi 400 evidence run, `make check`, a
-clean second provisioning run, and recorded display/input/audio observations.
-No emulator is qualified by M1.1.
+prerequisites. Acceptance requires a real Pi 400 evidence run using the canonical
+DRD identity, `make check`, a clean second provisioning run, and recorded
+display/input/audio observations. No emulator is qualified by M1.1.
 
 ### M1.2 — reproducible graphics/audio/input dependencies
 
