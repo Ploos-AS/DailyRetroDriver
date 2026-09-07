@@ -1,10 +1,10 @@
 # Authentic computer experience
 
-RetroDailyDriver prioritizes the experience of using the original or intended
-computer environment over operating the Linux host or an emulator frontend.
-Once a personality starts, the user should encounter its native environment as
-directly as practical. The Raspberry Pi is the host; it should disappear during
-normal use.
+Daily Retro Driver (DRD) prioritizes the experience of using the original or
+intended computer environment over operating the Linux host or an emulator
+frontend. Once a personality starts, the user should encounter its native
+environment as directly as practical. The Raspberry Pi is the host; it should
+disappear during normal use.
 
 This is why the official targets remain the keyboard computers Raspberry Pi 400,
 Pi 500, and Pi 500+. They are chosen for the physical keyboard-computer illusion,
@@ -55,7 +55,7 @@ identical machine constraints across families.
 The intended flow is:
 
 ```text
-Power on -> RetroDailyDriver selector -> selected computer -> native environment
+Power on -> Daily Retro Driver selector -> selected computer -> native environment
 ```
 
 Examples include Workbench or an Amiga boot disk, GEM/TOS, a C64 `READY.`
