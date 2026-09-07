@@ -2,13 +2,13 @@
 
 ## Microcomputer experience contract
 
-RetroDailyDriver emulates computers, not game consoles. It is a multi-personality
-personal computer appliance, not a ROM browser, console frontend, cover-art
-launcher, or game collection manager. A future boot flow selects a personality
-whose native environment then hides the host OS:
+Daily Retro Driver (DRD) emulates computers, not game consoles. It is a
+multi-personality personal computer appliance, not a ROM browser, console
+frontend, cover-art launcher, or game collection manager. A future boot flow
+selects a personality whose native environment then hides the host OS:
 
 ```text
-POWER ON -> RetroDailyDriver -> personality -> native computer environment
+POWER ON -> Daily Retro Driver -> personality -> native computer environment
 ```
 
 The family registry carries shared experience defaults:
@@ -31,17 +31,17 @@ recovery, ARM64 support, and reproducible unattended installation.
 
 ## Separation of concerns
 
-RetroDailyDriver treats DietPi as a managed host, not a desktop. Root-owned
-declarative configuration lives in `/etc/retro-daily-driver`; versioned source
+Daily Retro Driver treats DietPi as a managed host, not a desktop. Root-owned
+declarative configuration lives in `/etc/daily-retro-driver`; versioned source
 is deployed from `hardware/` and `profiles/`. Runtime data lives below
-`/srv/retro-daily-driver`. Emulator processes will run as the unprivileged
-`retro` service account and will not own host configuration.
+`/srv/daily-retro-driver`. Emulator processes will run as the unprivileged `drd`
+service account and will not own host configuration.
 
 The runtime tree separates asset inputs, immutable profile material, and mutable
 state:
 
 ```text
-/srv/retro-daily-driver/
+/srv/daily-retro-driver/
 ├── assets/                 # user-owned inputs, indexed by manifests
 ├── profiles/               # materialized, reproducible profile data
 ├── state/{registered-family-id}/
@@ -51,12 +51,12 @@ state:
 └── reports/
 ```
 
-The root is `root:retro` mode `0750`. Mutable child directories are
-`retro:retro` mode `0750`; the reproducible `profiles/` directory is
-`root:retro` mode `0750`. Nothing is world-writable. Host administrators may be
-added to the separate `retro-admin` system group, which is an authorization hook
-for later milestones and currently grants no sudo policy. The `retro` service
-account is deliberately not a member of that group.
+The root is `root:drd` mode `0750`. Mutable child directories are `drd:drd`
+mode `0750`; the reproducible `profiles/` directory is `root:drd` mode `0750`.
+Nothing is world-writable. Host administrators may be added to the separate
+`drd-admin` system group, which is an authorization hook for later milestones
+and currently grants no sudo policy. The `drd` service account is deliberately
+not a member of that group.
 
 Configuration is reproducible and replaceable. `state/` and `media/` are mutable
 and survive profile redeployment. `assets/` is user-managed but auditable by
@@ -77,7 +77,7 @@ policy. A future board normally requires one new document and alias, not changes
 throughout every appliance family.
 
 The M0 playbook records detected architecture, model, resolved hardware ID, and
-capabilities in `/etc/retro-daily-driver/detected-host.yml` for auditing. An
+capabilities in `/etc/daily-retro-driver/detected-host.yml` for auditing. An
 unknown model remains usable for diagnostics but is unresolved rather than
 silently receiving guessed policy.
 
@@ -134,7 +134,7 @@ After host initialization, a future dedicated graphical session will start a
 small appliance manager. Its conceptual top-level menu is:
 
 ```text
-RETRO DAILY DRIVER
+DAILY RETRO DRIVER
 
 Classic Computers
 Amiga
@@ -162,12 +162,11 @@ Administration
 
 The manager will derive this menu from the family registry and profile
 classification/order and eligibility, not literal F1-F10 bindings. It will
-validate configuration and
-assets, present eligible profiles, launch exactly one fullscreen emulator,
-collect logs, and return to the selector on a clean exit or crash. A session
-supervisor will enforce process ownership and recovery. Linux administration
-remains available on a separate console or explicitly enabled administrative
-path.
+validate configuration and assets, present eligible profiles, launch exactly one
+fullscreen emulator, collect logs, and return to the selector on a clean exit or
+crash. A session supervisor will enforce process ownership and recovery. Linux
+administration remains available on a separate console or explicitly enabled
+administrative path.
 
 No launcher, graphical session, supervisor, or emulator is implemented in M0.3.
 
