@@ -1,6 +1,6 @@
-# RetroDailyDriver
+# Daily Retro Driver
 
-RetroDailyDriver is a reproducible, DietPi-based personal microcomputer
+Daily Retro Driver (DRD) is a reproducible, DietPi-based personal microcomputer
 appliance for Raspberry Pi keyboard computers. It emulates computers, not game
 consoles. The host is infrastructure: later milestones will boot into a small
 personality selector and run the selected computer environment fullscreen, while
@@ -12,7 +12,11 @@ computer personality. The intended experience is that the Pi 400, Pi 500, or
 Pi 500+ keyboard computer feels like the selected Amiga, Atari, Commodore,
 Spectrum, MSX, or modern-retro machine.
 
-## M0–M0.3 status
+The canonical product name is **Daily Retro Driver**, abbreviated **DRD**. The
+canonical repository is `Ploos-AS/DailyRetroDriver`; runtime/configuration paths
+use the `daily-retro-driver` slug and service identities use the `drd` prefix.
+
+## M0–M1.1 status
 
 M0 establishes the repository contracts, hardware and appliance profile
 schemas, asset manifest format, DietPi/Debian provisioning foundation, and a
@@ -20,12 +24,16 @@ non-destructive diagnostic tool. M0.1 generalizes family handling through a
 declarative registry and adds Atari 8-bit, ZX Spectrum, and MSX profiles. M0.2
 adds classic BBC/Apple II/Archimedes and modern-retro X16, MEGA65, Agon,
 Neo6502, Foenix, Colour Maximite 2, and X65 families, plus Spectrum Next. It
-does **not** install or launch emulators,
-ROMs, operating systems, or a graphical interface.
+does **not** install or launch emulators, ROMs, operating systems, or a graphical
+interface.
 
 M0.3 adds the authenticity-first principle, authentic/enhanced profile intent,
 and capability/runtime-assessment policy. Performance advice does not silently
 forbid a profile: `not_recommended` remains user-startable with acknowledgement.
+
+M1.1 adds the Raspberry Pi 400 host-baseline qualification harness. Repository
+implementation is present, but physical Pi 400 qualification remains
+**NOT PERFORMED** until evidence is collected from the real reference machine.
 
 Initial hardware targets are Raspberry Pi 400, Raspberry Pi 500, and Raspberry
 Pi 500+. The first-class classic families are Amiga (Amiberry), Atari ST / TT /
@@ -66,6 +74,16 @@ creates the service identity and canonical runtime tree, resolves hardware by
 capabilities, deploys public configuration, and verifies the result. Run it a
 second time and inspect the recap for unintended changes.
 
+The canonical host paths are:
+
+```text
+/etc/daily-retro-driver
+/srv/daily-retro-driver
+```
+
+The canonical service identity is `drd:drd`; administrators may later use the
+separate `drd-admin` group.
+
 ## Asset policy
 
 Proprietary ROMs, operating systems, disk images, and commercial software must
@@ -89,7 +107,6 @@ The registry also records classic versus `modern_retro` classification,
 microcomputer experience defaults, and emulator qualification state. A doctor
 `PASS` means profile/configuration integrity only; `candidate` means an emulator
 has been identified but not qualified; `qualified` requires recorded evidence.
-M0.3 still marks no emulator qualified and makes no measured performance claim.
 
 ## License
 
