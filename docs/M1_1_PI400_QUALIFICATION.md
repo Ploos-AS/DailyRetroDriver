@@ -12,6 +12,22 @@ Physical Raspberry Pi 400 qualification: **NOT PERFORMED**.
 The milestone is not complete until evidence from a real Pi 400 has been
 captured and reviewed.
 
+## Canonical DRD identity
+
+Qualification must use the renamed Daily Retro Driver identity:
+
+- product: `Daily Retro Driver` (`DRD`)
+- repository: `Ploos-AS/DailyRetroDriver`
+- runtime root: `/srv/daily-retro-driver`
+- configuration root: `/etc/daily-retro-driver`
+- service account/group: `drd:drd`
+- administration group: `drd-admin`
+- doctor command: `scripts/drd-doctor`
+- qualification command: `scripts/drd-qualify-host`
+
+Evidence produced under the former `RetroDailyDriver` / `retro-daily-driver`
+identity is not accepted as the canonical M1.1 physical qualification record.
+
 ## Target
 
 - Raspberry Pi 400
@@ -34,9 +50,9 @@ Then, from a checkout of this repository on the Pi 400:
 
 ```bash
 make check
-sudo ./scripts/retro-doctor --repo-root .
-sudo python3 scripts/retro-qualify-host \
-  --output /srv/retro-daily-driver/reports/m1.1-pi400.json
+sudo ./scripts/drd-doctor --repo-root .
+sudo python3 scripts/drd-qualify-host \
+  --output /srv/daily-retro-driver/reports/m1.1-pi400.json
 ```
 
 Review the JSON evidence rather than relying only on the process exit status.
@@ -55,7 +71,7 @@ Record alongside the JSON report:
    visible to Linux;
 4. selected audio output and a successful audible playback test;
 5. the second Ansible provisioning recap (`changed=0` is the target);
-6. any warnings from `retro-doctor` or the qualification report.
+6. any warnings from `drd-doctor` or the qualification report.
 
 Do not mark display timing, latency, audio quality, keyboard mapping, fullscreen
 session behavior or any emulator as qualified from this baseline alone. Those
