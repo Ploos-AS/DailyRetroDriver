@@ -40,6 +40,32 @@ Provision pinned graphics, audio, and input dependencies; define the dedicated
 local session and console/admin boundary; and qualify display/controller paths on
 Pi 400, Pi 500, and Pi 500+. A second provisioning run must be clean.
 
+### M1.1 — Raspberry Pi 400 host baseline (implementation complete; physical qualification pending)
+
+Make Pi 400 the first physical reference host. Provide a non-destructive,
+machine-readable qualification harness for DietPi/Debian identity, ARM64,
+hardware identity, DRM/KMS visibility, evdev input, ALSA evidence, and session
+prerequisites. Acceptance requires a real Pi 400 evidence run, `make check`, a
+clean second provisioning run, and recorded display/input/audio observations.
+No emulator is qualified by M1.1.
+
+### M1.2 — reproducible graphics/audio/input dependencies
+
+Pin and provision the host packages and configuration selected from M1.1
+evidence, preserving the console/admin boundary and avoiding a general-purpose
+desktop environment.
+
+### M1.3 — dedicated local appliance session
+
+Establish and qualify the local graphical session boundary needed by M2, with
+host UI hidden during appliance use and an explicit administration/recovery
+path.
+
+### M1.4 — Pi 500 / Pi 500+ host qualification
+
+Repeat the host qualification contract on the remaining official keyboard
+computer targets without weakening Pi 400 support.
+
 ## M2 — appliance/session manager
 
 Implement the registry-driven fullscreen personality selector, profile/capability
