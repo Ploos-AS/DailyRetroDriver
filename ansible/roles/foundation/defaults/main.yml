@@ -1,9 +1,9 @@
 ---
-retro_root: /srv/retro-daily-driver
-retro_config_root: /etc/retro-daily-driver
-retro_user: retro
-retro_group: retro
-retro_admin_group: retro-admin
+retro_root: /srv/daily-retro-driver
+retro_config_root: /etc/daily-retro-driver
+retro_user: drd
+retro_group: drd
+retro_admin_group: drd-admin
 retro_foundation_packages:
   - ca-certificates
   - python3
